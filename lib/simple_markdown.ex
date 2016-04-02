@@ -1,8 +1,9 @@
 defmodule SimpleMarkdown do
-    @type attribute :: %{ :__struct__ => atom, :input => [attribute], :option => any }
+    @type attribute :: %{ :__struct__ => atom, :input => [attribute | String.t], :option => any }
 
     @spec convert(String.t, [parser: [Parsey.ast], render: ([SimpleMarkdown.attribute | String.t] -> String.t)]) :: String.t
-    def convert(input, options \\ [parser: Application.fetch_env!(:simple_markdown, :rules), render: &SimpleMarkdown.Renderer.HTML.render/1]) do
+    def convert(input, options \\ []) do
+        options = Keyword.merge([parser: Application.fetch_env!(:simple_markdown, :rules), render: &SimpleMarkdown.Renderer.HTML.render/1], options)
         SimpleMarkdown.Parser.parse(input, options[:parser]) |> ast_to_structs |> options[:render].()
     end
 
