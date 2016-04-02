@@ -16,5 +16,5 @@ defmodule SimpleMarkdown do
     defp node_to_struct(non_node), do: non_node
 
     @spec atom_to_module(atom) :: atom
-    defp atom_to_module(name), do: String.to_atom("Elixir.SimpleMarkdown.Attribute." <> String.capitalize(to_string(name)))
+    defp atom_to_module(name), do: String.to_atom("Elixir.SimpleMarkdown.Attribute." <> (to_string(name) |> String.split("_") |> Enum.map(&String.capitalize(&1)) |> Enum.join))
 end

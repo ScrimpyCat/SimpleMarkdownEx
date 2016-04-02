@@ -5,6 +5,7 @@ defmodule SimpleMarkdownTest do
     test "converting AST to struct" do
         assert ["hello"] == SimpleMarkdown.ast_to_structs(["hello"])
         assert [%{ __struct__: SimpleMarkdown.Attribute.Test, input: ["hello"] }] == SimpleMarkdown.ast_to_structs([{ :test, ["hello"] }])
+        assert [%{ __struct__: SimpleMarkdown.Attribute.TestTest, input: ["hello"] }] == SimpleMarkdown.ast_to_structs([{ :test_test, ["hello"] }])
         assert [%{ __struct__: SimpleMarkdown.Attribute.Test, input: ["hello"], option: 1 }] == SimpleMarkdown.ast_to_structs([{ :test, ["hello"], 1 }])
         assert [%{ __struct__: SimpleMarkdown.Attribute.Test, input: ["hello"] }, "bye"] == SimpleMarkdown.ast_to_structs([{ :test, ["hello"] }, "bye"])
         assert [%{ __struct__: SimpleMarkdown.Attribute.Test, input: [%{ __struct__: SimpleMarkdown.Attribute.Hello, input: [] }] }] == SimpleMarkdown.ast_to_structs([{ :test, [{ :hello, [] }] }])
