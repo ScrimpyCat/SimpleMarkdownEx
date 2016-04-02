@@ -24,16 +24,16 @@ Example
 ```elixir
 #config/simple_markdown_rules.exs
 #add the following rule to our ruleset
-lol: %{ match: ~r/\\Alol/, rules: [] }
+lol: %{ match: ~r/\Alol/, rules: [] }
 
 #lib/lol_renderer.ex
 #add a renderer for the HTML renderer for our "lol" rule
 defimpl SimpleMarkdown.Renderer.HTML, for: SimpleMarkdown.Attribute.Lol do
-    def render(_), do: "<img src=\\"lolcat.jpg\\">"
+    def render(_), do: "<img src=\"lolcat.jpg\">"
 end
 
 #usage:
-SimpleMarkdown.convert("#lol") #=> "<h1><img src=\\"lolcat.jpg\\"></h1>"
+SimpleMarkdown.convert("#lol") #=> "<h1><img src=\"lolcat.jpg\"></h1>"
 ```
 
 Additionally new renderers can be created. How these new renderers should
