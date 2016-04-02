@@ -13,7 +13,7 @@ defmodule Mix.Tasks.SimpleMarkdown.Rules.New do
     """
 
     def run(_) do
-        if File.cp_r!(to_string(__info__(:compile)[:source]) |> Path.split |> Enum.slice(0..-5) |> Path.join |> Path.join("config/simple_markdown_rules.exs"), "config/simple_markdown_rules.exs", fn _, destination ->
+        if File.cp_r!(__DIR__ |> Path.split |> Enum.slice(0..-4) |> Path.join |> Path.join("config/simple_markdown_rules.exs"), "config/simple_markdown_rules.exs", fn _, destination ->
             Mix.shell.yes?("Do you want to replace the file at #{destination}")
         end) |> Enum.count == 1 do
             Mix.shell.info "Please import the simple_markdown_rules.exs config."
