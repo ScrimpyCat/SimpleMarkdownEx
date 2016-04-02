@@ -59,52 +59,19 @@ defmodule SimpleMarkdownRendererHTMLTest do
         assert "<code>test</code>" == [{ :code, ["test"] }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
     end
 
-    # test "rendering examples" do
-    #     input = """
-    #     Heading
-    #     =======
-
-    #     Sub-heading
-    #     -----------
-
-    #     ###Another deeper heading
-
-    #     Paragraphs are separated
-    #     by a blank line.
-
-    #     Two spaces at the end of a line leave a  
-    #     line break.
-
-    #     Text attributes _italic_, 
-    #     **bold**, `monospace`.
-
-    #     Bullet list:
-
-    #     * apples
-    #     * oranges
-    #     * pears
-
-    #     Numbered list:
-
-    #     1. apples
-    #     2. oranges
-    #     3. pears
-
-    #     A [link](http://example.com).
-    #     """
-
-    #     assert == [
-    #         { :header, ["Heading"], 1 },
-    #         { :header, ["Sub-heading"], 2 },
-    #         { :header, ["Another deeper heading"], 3 },
-    #         { :paragraph, ["Paragraphs are separated", "by a blank line."] },
-    #         { :paragraph, ["Two spaces at the end of a line leave a", { :line_break, [] }, "line break."] },
-    #         { :paragraph, ["Text attributes ", { :emphasis, ["italic"], :regular }, ", ", { :emphasis, ["bold"], :strong }, ", ", { :code, ["monospace"] }, "."] },
-    #         { :paragraph, ["Bullet list:"] },
-    #         { :list, [item: ["apples"], item: ["oranges"], item: ["pears"]], :unordered },
-    #         { :paragraph, ["Numbered list:"] },
-    #         { :list, [item: ["apples"], item: ["oranges"], item: ["pears"]], :ordered },
-    #         { :paragraph, ["A ", { :link, ["link"], "http://example.com" }, "."] }
-    #     ] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
-    # end
+    test "rendering examples" do
+        assert "<h1>Heading</h1><h2>Sub-heading</h2><h3>Another deeper heading</h3><p>Paragraphs are separatedby a blank line.</p><p>Two spaces at the end of a line leave a<br>line break.</p><p>Text attributes <em>italic</em>, <strong>bold</strong>, <code>monospace</code>.</p><p>Bullet list:</p><ul><li>apples</li><li>oranges</li><li>pears</li></ul><p>Numbered list:</p><ol><li>apples</li><li>oranges</li><li>pears</li></ol><p>A <a href=\"http://example.com\">link</a>.</p>" == [
+            { :header, ["Heading"], 1 },
+            { :header, ["Sub-heading"], 2 },
+            { :header, ["Another deeper heading"], 3 },
+            { :paragraph, ["Paragraphs are separated", "by a blank line."] },
+            { :paragraph, ["Two spaces at the end of a line leave a", { :line_break, [] }, "line break."] },
+            { :paragraph, ["Text attributes ", { :emphasis, ["italic"], :regular }, ", ", { :emphasis, ["bold"], :strong }, ", ", { :code, ["monospace"] }, "."] },
+            { :paragraph, ["Bullet list:"] },
+            { :list, [item: ["apples"], item: ["oranges"], item: ["pears"]], :unordered },
+            { :paragraph, ["Numbered list:"] },
+            { :list, [item: ["apples"], item: ["oranges"], item: ["pears"]], :ordered },
+            { :paragraph, ["A ", { :link, ["link"], "http://example.com" }, "."] }
+        ] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
+    end
 end
