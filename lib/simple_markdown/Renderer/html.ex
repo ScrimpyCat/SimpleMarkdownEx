@@ -1,4 +1,26 @@
 defprotocol SimpleMarkdown.Renderer.HTML do
+    @moduledoc """
+      A renderer protocol for HTML.
+
+      Individual rule renderers can be overriden or new ones may be
+      added. Rule types follow the format of structs defined under
+      `SimpleMarkdown.Attributes`. e.g. If there is a rule with the
+      name `:header`, to provide a rendering implementation for that
+      rule, you would specify `for: SimpleMarkdown.Attribute.Header`.
+
+      Rules then consist of a Map with an `input` field, and an optional
+      `option` field. See <code class="inline"><a href="SimpleMarkdown.html#t:SimpleMarkdown.attribute/0"><span class="hljs-constant">SimpleMarkdown.</span>attribute</a></code>.
+
+      Example
+      -------
+        defimpl SimpleMarkdown.Renderer.HTML, for: SimpleMarkdown.Attribute.Header do
+            def render(%{ input: input, option: size }), do: "<h\#{size}>\#{SimpleMarkdown.Renderer.HTML.render(input)}</h\#{size}>"
+        end
+    """
+
+    @doc """
+      Render the parsed markdown as HTML.
+    """
     @spec render([SimpleMarkdown.attribute | String.t] | SimpleMarkdown.attribute | String.t) :: String.t
     def render(ast)
 end
