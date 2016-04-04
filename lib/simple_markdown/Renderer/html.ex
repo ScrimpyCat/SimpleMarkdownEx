@@ -93,7 +93,7 @@ defimpl SimpleMarkdown.Renderer.HTML, for: SimpleMarkdown.Attribute.Item do
 end
 
 defimpl SimpleMarkdown.Renderer.HTML, for: SimpleMarkdown.Attribute.PreformattedCode do
-    def render(%{ input: input }), do: "<pre><code>#{SimpleMarkdown.Renderer.HTML.render(input)}</code></pre>"
+    def render(%{ input: input }), do: "<pre><code>#{SimpleMarkdown.Renderer.HTML.render(input) |> HtmlEntities.encode}</code></pre>"
 end
 
 defimpl SimpleMarkdown.Renderer.HTML, for: SimpleMarkdown.Attribute.Paragraph do
@@ -113,5 +113,5 @@ defimpl SimpleMarkdown.Renderer.HTML, for: SimpleMarkdown.Attribute.Image do
 end
 
 defimpl SimpleMarkdown.Renderer.HTML, for: SimpleMarkdown.Attribute.Code do
-    def render(%{ input: input }), do: "<code>#{SimpleMarkdown.Renderer.HTML.render(input)}</code>"
+    def render(%{ input: input }), do: "<code>#{SimpleMarkdown.Renderer.HTML.render(input) |> HtmlEntities.encode}</code>"
 end

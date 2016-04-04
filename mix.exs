@@ -33,6 +33,7 @@ defmodule SimpleMarkdown.Mixfile do
     defp deps do
         [
             { :parsey, git: "https://github.com/ScrimpyCat/Parsey.git" },
+            { :html_entities, "~> 0.3" },
             { :earmark, "~> 0.1", only: :dev },
             { :ex_doc, "~> 0.7", only: :dev }
         ]
