@@ -2,7 +2,8 @@ defmodule SimpleMarkdown.Parser do
     @moduledoc """
       Parse the string with the given markdown ruleset.
 
-      For understanding of how rulesets work, check the Parsey docs.
+      For understanding of how rulesets work, check the
+      [Parsey docs](https://hexdocs.pm/parsey/api-reference.html).
     """
 
     @doc """
