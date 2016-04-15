@@ -43,3 +43,11 @@ be parsed, then the AST will be converted to these structs, and then
 that will be passed to your renderer. Alternatively you may call
 `SimpleMarkdown.Parser.parse/1` directly and then manipulate that AST
 how you see fit, and pass that to your renderer.
+
+Installation
+------------
+```elixir
+defp deps do
+    [{ :simple_markdown, "~> 0.0.1" }]
+end
+```
