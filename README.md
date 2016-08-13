@@ -48,6 +48,6 @@ Installation
 ------------
 ```elixir
 defp deps do
-    [{ :simple_markdown, "~> 0.0.1" }]
+    [{ :simple_markdown, "~> 0.0.3" }]
 end
 ```
