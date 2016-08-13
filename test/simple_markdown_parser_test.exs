@@ -5,22 +5,24 @@ defmodule SimpleMarkdownParserTest do
     setup context do
         rules = Application.fetch_env!(:simple_markdown, :rules)
 
-        if type = context[:type] do
+        rules = if type = context[:attribute] do
             rules = Enum.filter(rules, fn
                 { ^type, _ } -> true
                 _ -> false
             end)
+        else
+            rules
         end
 
         { :ok, [rules: rules] }
     end
 
-    @tag type: :line_break
+    @tag attribute: :line_break
     test "parsing line break", context do
         assert ["test", { :line_break, [] }] == SimpleMarkdown.Parser.parse("test  ", context.rules)
     end
 
-    @tag type: :header
+    @tag attribute: :header
     test "parsing header", context do
         assert [{ :header, ["test"], 1 }] == SimpleMarkdown.Parser.parse("#test", context.rules)
         assert [{ :header, ["test"], 2 }] == SimpleMarkdown.Parser.parse("##test", context.rules)
@@ -70,7 +72,7 @@ defmodule SimpleMarkdownParserTest do
 
     end
 
-    @tag type: :emphasis
+    @tag attribute: :emphasis
     test "parsing emphasis", context do
         assert [{ :emphasis, ["test"], :regular }] == SimpleMarkdown.Parser.parse("_test_", context.rules)
         assert [{ :emphasis, ["test"], :regular }] == SimpleMarkdown.Parser.parse("*test*", context.rules)
@@ -104,7 +106,7 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :paragraph, [{ :emphasis, ["test"], :strong }] }] == SimpleMarkdown.Parser.parse("**test**")
     end
 
-    @tag type: :horizontal_rule
+    @tag attribute: :horizontal_rule
     test "parsing horizontal rule", context do
         assert [{ :horizontal_rule, [] }] == SimpleMarkdown.Parser.parse("***", context.rules)
         assert [{ :horizontal_rule, [] }] == SimpleMarkdown.Parser.parse("* * *", context.rules)
@@ -121,7 +123,7 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :horizontal_rule, [] }] == SimpleMarkdown.Parser.parse("------")
     end
 
-    @tag type: :table
+    @tag attribute: :table
     test "parsing table", context do
         assert [{ :table, ["\n", { :row, ["1", "2", "3", "4"] }, "\n", { :row, ["11", "22", "33", "44"] }], [{ "One", :default }, { "Two", :center }, { "Three", :right }, { "Four", :left }] }] == SimpleMarkdown.Parser.parse("|One|Two|Three|Four|\n|---|:---:|---:|:---|\n|1|2|3|4|\n|11|22|33|44|", context.rules)
         assert [{ :table, ["\n", { :row, ["1", "2", "3", "4"] }, "\n", { :row, ["11", "22", "33", "44"] }], [{ "One", :default }, { "Two", :center }, { "Three", :right }, { "Four", :left }] }] == SimpleMarkdown.Parser.parse("One|Two|Three|Four\n---|:---:|---:|:---\n1|2|3|4\n11|22|33|44", context.rules)
@@ -134,7 +136,7 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :table, [row: ["1", "2", "3", "4"], row: ["11", "22", "33", "44"]], [:default, :center, :right, :left] }] == SimpleMarkdown.Parser.parse("---|:---:|---:|:---\n1|2|3|4\n11|22|33|44")
     end
 
-    @tag type: :list
+    @tag attribute: :list
     test "parsing list", context do
         assert [{ :list, [{ :item, ["test"] }], :unordered }] == SimpleMarkdown.Parser.parse("* test", context.rules)
         assert [{ :list, [{ :item, ["test"] }], :unordered }, "\n"] == SimpleMarkdown.Parser.parse("* test\n", context.rules)
@@ -151,7 +153,7 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :list, [{ :item, ["a"] }, { :item, ["b"] }], :ordered }] == SimpleMarkdown.Parser.parse("1. a\n2. b")
     end
 
-    @tag type: :preformatted_code
+    @tag attribute: :preformatted_code
     test "parsing preformatted code", context do
         assert [{ :preformatted_code, ["test"] }] == SimpleMarkdown.Parser.parse("    test", context.rules)
         assert [{ :preformatted_code, ["test\n    test"] }] == SimpleMarkdown.Parser.parse("    test\n        test", context.rules)
@@ -174,7 +176,7 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :preformatted_code, ["_test_\n\ttest"] }] == SimpleMarkdown.Parser.parse("```_test_\n\ttest```")
     end
 
-    @tag type: :paragraph
+    @tag attribute: :paragraph
     test "parsing paragraph", context do
         assert [{ :paragraph, ["test"] }] == SimpleMarkdown.Parser.parse("test", context.rules)
         assert [{ :paragraph, ["test test"] }] == SimpleMarkdown.Parser.parse("test test", context.rules)
@@ -187,7 +189,7 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :paragraph, ["test"] }, { :paragraph, ["test"] }] == SimpleMarkdown.Parser.parse("test\n\ntest")
     end
 
-    @tag type: :blockquote
+    @tag attribute: :blockquote
     test "parsing blockquote", context do
         assert [{ :blockquote, ["test"] }] == SimpleMarkdown.Parser.parse("> test", context.rules)
         assert [{ :blockquote, ["test"] }, "\n"] == SimpleMarkdown.Parser.parse("> test\n", context.rules)
@@ -206,7 +208,7 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :paragraph, [{ :blockquote, ["test", { :blockquote, ["stuff", "again"] }, "blah"], }] }] == SimpleMarkdown.Parser.parse("> test\n> > stuff\n> > again\n> blah")
     end
 
-    @tag type: :link
+    @tag attribute: :link
     test "parsing link", context do
         assert [{ :link, ["test"], "example.com" }] == SimpleMarkdown.Parser.parse("[test](example.com)", context.rules)
 
@@ -214,7 +216,7 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :paragraph, [{ :link, [{ :emphasis, ["test"], :regular }], "example.com" }] }] == SimpleMarkdown.Parser.parse("[_test_](example.com)")
     end
 
-    @tag type: :image
+    @tag attribute: :image
     test "parsing image", context do
         assert [{ :image, ["test"], "example.com/image.jpg" }] == SimpleMarkdown.Parser.parse("![test](example.com/image.jpg)", context.rules)
 
@@ -222,7 +224,7 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :paragraph, [{ :image, [{ :emphasis, ["test"], :regular }], "example.com/image.jpg" }] }] == SimpleMarkdown.Parser.parse("![_test_](example.com/image.jpg)")
     end
 
-    @tag type: :code
+    @tag attribute: :code
     test "parsing code", context do
         assert [{ :code, ["test"] }] == SimpleMarkdown.Parser.parse("`test`", context.rules)
 
