@@ -9,6 +9,7 @@ defmodule SimpleMarkdown.Mixfile do
             elixir: "~> 1.2",
             build_embedded: Mix.env == :prod,
             start_permanent: Mix.env == :prod,
+            consolidate_protocols: Mix.env != :test,
             deps: deps,
             dialyzer: [plt_add_deps: true],
             package: package

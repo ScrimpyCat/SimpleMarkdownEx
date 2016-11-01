@@ -35,10 +35,16 @@ defmodule SimpleMarkdownRendererHTMLTest do
         assert "<ol><li>a</li><li>b</li></ol>" == [{ :list, [{ :item, ["a"] }, { :item, ["b"] }], :ordered }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
     end
 
+    defimpl SimpleMarkdown.Renderer.HTML, for: SimpleMarkdown.Attribute.PreformattedCode.Test do
+        def render(%{ option: _ }), do: ""
+        def render(%{ input: input }), do: "<pre><code class=\"test\">#{SimpleMarkdown.Renderer.HTML.render(input) |> HtmlEntities.encode}</code></pre>"
+    end
+
     test "rendering preformatted code" do
         assert "<pre><code>test</code></pre>" == [{ :preformatted_code, ["test"] }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
         assert "<pre><code>&lt;test&gt;</code></pre>" == [{ :preformatted_code, ["<test>"] }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
         assert "<pre><code>test</code></pre>" == [{ :preformatted_code, ["test"], :syntax }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
+        assert "<pre><code class=\"test\">test</code></pre>" == [{ :preformatted_code, ["test"], :test }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
     end
 
     test "rendering paragraph" do

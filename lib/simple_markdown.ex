@@ -34,7 +34,7 @@ defmodule SimpleMarkdown do
       Additionally new renderers can be created. How these new renderers should
       be implemented is left up to you depending on how you'll provide input.
       If you use the standard `convert/2` then the input will
-      be parsed, then the AST will be converted to these structs, and then 
+      be parsed, then the AST will be converted to these structs, and then
       that will be passed to your renderer. Alternatively you may call
       `SimpleMarkdown.Parser.parse/1` directly and then manipulate that AST
       how you see fit, and pass that to your renderer.
@@ -68,5 +68,26 @@ defmodule SimpleMarkdown do
 
     @doc false
     @spec atom_to_module(atom) :: atom
-    defp atom_to_module(name), do: String.to_atom("Elixir.SimpleMarkdown.Attribute." <> (to_string(name) |> String.split("_") |> Enum.map(&String.capitalize(&1)) |> Enum.join))
+    def atom_to_module(name) do
+        String.to_atom("Elixir.SimpleMarkdown.Attribute." <> format_as_module(to_string(name)))
+    end
+
+    @doc """
+      Format a string to follow the module naming convention.
+    """
+    @spec format_as_module(String.t) :: String.t
+    def format_as_module(name) do
+        name
+        |> String.split(".")
+        |> Enum.map(fn module ->
+            String.split(module, "_") |> Enum.map(&String.capitalize(&1)) |> Enum.join
+        end)
+        |> Enum.join(".")
+    end
+
+    @doc """
+      Create a child module relative to parent.
+    """
+    @spec child_module(atom, atom) :: atom
+    def child_module(parent, child), do: String.to_atom(to_string(parent) <> "." <> format_as_module(to_string(child)))
 end
