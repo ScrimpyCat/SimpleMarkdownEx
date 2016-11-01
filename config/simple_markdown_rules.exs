@@ -32,7 +32,7 @@ config :simple_markdown,
         table: %{
             match: ~r/\A((\|?[ :-]*?-[ :-]*){1,}).*((\n.*\|.*)+)/,
             capture: 3,
-            option: fn input, i = [_, { align_index, align_length }|_] ->
+            option: fn input, [_, { align_index, align_length }|_] ->
                 String.slice(input, align_index, align_length) |> String.split("|", trim: true) |> Enum.map(fn
                     ":" <> align -> if String.last(align) == ":", do: :center, else: :left
                     align -> if String.last(align) == ":", do: :right, else: :default
