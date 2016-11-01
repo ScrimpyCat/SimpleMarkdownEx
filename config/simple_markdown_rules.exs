@@ -48,7 +48,15 @@ config :simple_markdown,
         list: %{ match: ~r/\A\*[[:blank:]]+.*(\n([[:blank:]]|\*).*)*/, capture: 0, option: :unordered, exclude: [:paragraph, :list], include: [item: ~r/(?<=\* ).*/] },
         list: %{ match: ~r/\A[[:digit:]]\.[[:blank:]]+.*(\n([[:blank:]]|([[:digit:]]\.)).*)*/, capture: 0, option: :ordered, exclude: [:paragraph, :list], include: [item: ~r/(?<=\. ).*/] },
         preformatted_code: %{ match: ~r/\A(\n*( {4,}|\t{1,}).*)+/, capture: 0, format: &(Regex.scan(~r/((?<=    )|(?<=\t)).*/, &1) |> Enum.join("\n")), rules: [] },
-        preformatted_code: %{ match: ~r/\A`{3}(.*?)`{3}/s, format: &String.replace_suffix(&1, "\n", ""), rules: [] },
+        preformatted_code: %{
+            match: ~r/\A`{3}\h*?(\S+)\h*?\n(.*?)`{3}/s,
+            option: fn input, [_, { syntax_index, syntax_length }|_] ->
+                String.slice(input, syntax_index, syntax_length) |> String.to_atom
+            end,
+            format: &String.replace_suffix(&1, "\n", ""),
+            rules: []
+        },
+        preformatted_code: %{ match: ~r/\A`{3}.*?\n(.*?)`{3}/s, format: &String.replace_suffix(&1, "\n", ""), rules: [] },
         paragraph: %{ match: ~r/\A(.|\n)*?\n{2,}/, capture: 0 },
         paragraph: %{ match: ~r/\A(.|\n)*(\n|\z)/, capture: 0 },
         emphasis: %{ match: ~r/\A\*\*(.+?)\*\*/, option: :strong, exclude: { :emphasis, :strong } },

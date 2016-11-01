@@ -38,6 +38,7 @@ defmodule SimpleMarkdownRendererHTMLTest do
     test "rendering preformatted code" do
         assert "<pre><code>test</code></pre>" == [{ :preformatted_code, ["test"] }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
         assert "<pre><code>&lt;test&gt;</code></pre>" == [{ :preformatted_code, ["<test>"] }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
+        assert "<pre><code>test</code></pre>" == [{ :preformatted_code, ["test"], :syntax }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
     end
 
     test "rendering paragraph" do
