@@ -6,14 +6,14 @@ defmodule Mix.Tasks.SimpleMarkdown.Rules.New do
       The rules config should be imported into the app's config.exs
         import_config "simple_markdown_rules.exs"
 
-      The rule config may be changed to suit your needs, if new rules are 
+      The rule config may be changed to suit your needs, if new rules are
       added or you wish the rendering behaviour of current rules to be changed
       this can be done by defining new rendering implementations for those
       rules.
     """
 
     def run(_) do
-        if File.cp_r!(__DIR__ |> Path.split |> Enum.slice(0..-4) |> Path.join |> Path.join("config/simple_markdown_rules.exs"), "config/simple_markdown_rules.exs", fn _, destination ->
+        if File.cp_r!(Path.join(__DIR__, "simple_markdown_rules.exs"), "config/simple_markdown_rules.exs", fn _, destination ->
             Mix.shell.yes?("Do you want to replace the file at #{destination}")
         end) |> Enum.count == 1 do
             Mix.shell.info "Please import the simple_markdown_rules.exs config."
