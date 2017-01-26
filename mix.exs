@@ -34,7 +34,7 @@ defmodule SimpleMarkdown.Mixfile do
     # Type `mix help deps` for more examples and options
     defp deps do
         [
-            { :parsey, "~> 0.0.1" },
+            { :parsey, "~> 0.0.2" },
             { :html_entities, "~> 0.3" },
             { :earmark, "~> 0.1", only: :dev },
             { :ex_doc, "~> 0.7", only: :dev }
