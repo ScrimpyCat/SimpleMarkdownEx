@@ -47,7 +47,11 @@ how you see fit, and pass that to your renderer.
 Installation
 ------------
 ```elixir
-defp deps do
-    [{ :simple_markdown, "~> 0.2.0" }]
+def applications do
+    [applications: [:simple_markdown]]
+end
+
+def deps do
+    [{ :simple_markdown, "~> 0.2.1" }]
 end
 ```
