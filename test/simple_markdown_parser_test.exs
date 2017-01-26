@@ -20,10 +20,12 @@ defmodule SimpleMarkdownParserTest do
     @tag attribute: :line_break
     test "parsing line break", context do
         assert ["test", { :line_break, [] }] == SimpleMarkdown.Parser.parse("test  ", context.rules)
+        assert ["tést", { :line_break, [] }] == SimpleMarkdown.Parser.parse("tést  ", context.rules)
     end
 
     @tag attribute: :header
     test "parsing header", context do
+        assert [{ :header, ["tést"], 1 }] == SimpleMarkdown.Parser.parse("#tést", context.rules)
         assert [{ :header, ["test"], 1 }] == SimpleMarkdown.Parser.parse("#test", context.rules)
         assert [{ :header, ["test"], 2 }] == SimpleMarkdown.Parser.parse("##test", context.rules)
         assert [{ :header, ["test"], 3 }] == SimpleMarkdown.Parser.parse("###test", context.rules)
@@ -70,10 +72,12 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :header, ["test"], 2 }] == SimpleMarkdown.Parser.parse("test\n----")
         assert [{ :header, ["test"], 1 }] == SimpleMarkdown.Parser.parse("test\n====")
 
+        assert [{ :header, ["tést"], 1 }] == SimpleMarkdown.Parser.parse("#tést")
     end
 
     @tag attribute: :emphasis
     test "parsing emphasis", context do
+        assert [{ :emphasis, ["tést"], :regular }] == SimpleMarkdown.Parser.parse("_tést_", context.rules)
         assert [{ :emphasis, ["test"], :regular }] == SimpleMarkdown.Parser.parse("_test_", context.rules)
         assert [{ :emphasis, ["test"], :regular }] == SimpleMarkdown.Parser.parse("*test*", context.rules)
         assert [{ :emphasis, ["test"], :strong }] == SimpleMarkdown.Parser.parse("__test__", context.rules)
@@ -104,6 +108,7 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :paragraph, [{ :emphasis, ["test"], :regular }] }] == SimpleMarkdown.Parser.parse("*test*")
         assert [{ :paragraph, [{ :emphasis, ["test"], :strong }] }] == SimpleMarkdown.Parser.parse("__test__")
         assert [{ :paragraph, [{ :emphasis, ["test"], :strong }] }] == SimpleMarkdown.Parser.parse("**test**")
+        assert [{ :paragraph, [{ :emphasis, ["tést"], :strong }] }] == SimpleMarkdown.Parser.parse("**tést**")
     end
 
     @tag attribute: :horizontal_rule
@@ -125,11 +130,13 @@ defmodule SimpleMarkdownParserTest do
 
     @tag attribute: :table
     test "parsing table", context do
+        assert [{ :table, ["\n", { :row, ["1", "2", "3", "4"] }, "\n", { :row, ["11", "22", "33", "44"] }], [{ "Oné", :default }, { "Two", :center }, { "Three", :right }, { "Four", :left }] }] == SimpleMarkdown.Parser.parse("|Oné|Two|Three|Four|\n|---|:---:|---:|:---|\n|1|2|3|4|\n|11|22|33|44|", context.rules)
         assert [{ :table, ["\n", { :row, ["1", "2", "3", "4"] }, "\n", { :row, ["11", "22", "33", "44"] }], [{ "One", :default }, { "Two", :center }, { "Three", :right }, { "Four", :left }] }] == SimpleMarkdown.Parser.parse("|One|Two|Three|Four|\n|---|:---:|---:|:---|\n|1|2|3|4|\n|11|22|33|44|", context.rules)
         assert [{ :table, ["\n", { :row, ["1", "2", "3", "4"] }, "\n", { :row, ["11", "22", "33", "44"] }], [{ "One", :default }, { "Two", :center }, { "Three", :right }, { "Four", :left }] }] == SimpleMarkdown.Parser.parse("One|Two|Three|Four\n---|:---:|---:|:---\n1|2|3|4\n11|22|33|44", context.rules)
         assert [{ :table, ["\n", { :row, ["1", "2", "3", "4"] }, "\n", { :row, ["11", "22", "33", "44"] }], [:default, :center, :right, :left] }] == SimpleMarkdown.Parser.parse("|---|:---:|---:|:---|\n|1|2|3|4|\n|11|22|33|44|", context.rules)
         assert [{ :table, ["\n", { :row, ["1", "2", "3", "4"] }, "\n", { :row, ["11", "22", "33", "44"] }], [:default, :center, :right, :left] }] == SimpleMarkdown.Parser.parse("---|:---:|---:|:---\n1|2|3|4\n11|22|33|44", context.rules)
 
+        assert [{ :table, [row: ["1", "2", "3", "4"], row: ["11", "22", "33", "44"]], [{ "Oné", :default }, { "Two", :center }, { "Three", :right }, { "Four", :left }] }] == SimpleMarkdown.Parser.parse("|Oné|Two|Three|Four|\n|---|:---:|---:|:---|\n|1|2|3|4|\n|11|22|33|44|")
         assert [{ :table, [row: ["1", "2", "3", "4"], row: ["11", "22", "33", "44"]], [{ "One", :default }, { "Two", :center }, { "Three", :right }, { "Four", :left }] }] == SimpleMarkdown.Parser.parse("|One|Two|Three|Four|\n|---|:---:|---:|:---|\n|1|2|3|4|\n|11|22|33|44|")
         assert [{ :table, [row: ["1", "2", "3", "4"], row: ["11", "22", "33", "44"]], [{ "One", :default }, { "Two", :center }, { "Three", :right }, { "Four", :left }] }] == SimpleMarkdown.Parser.parse("One|Two|Three|Four\n---|:---:|---:|:---\n1|2|3|4\n11|22|33|44")
         assert [{ :table, [row: ["1", "2", "3", "4"], row: ["11", "22", "33", "44"]], [:default, :center, :right, :left] }] == SimpleMarkdown.Parser.parse("|---|:---:|---:|:---|\n|1|2|3|4|\n|11|22|33|44|")
@@ -139,12 +146,14 @@ defmodule SimpleMarkdownParserTest do
     @tag attribute: :list
     test "parsing list", context do
         assert [{ :list, [{ :item, ["test"] }], :unordered }] == SimpleMarkdown.Parser.parse("* test", context.rules)
+        assert [{ :list, [{ :item, ["tést"] }], :unordered }] == SimpleMarkdown.Parser.parse("* tést", context.rules)
         assert [{ :list, [{ :item, ["test"] }], :unordered }, "\n"] == SimpleMarkdown.Parser.parse("* test\n", context.rules)
         assert [{ :list, [{ :item, ["a"] }, { :item, ["b"] }], :unordered }] == SimpleMarkdown.Parser.parse("* a\n* b", context.rules)
         assert [{ :list, [{ :item, ["test"] }], :ordered }] == SimpleMarkdown.Parser.parse("1. test", context.rules)
         assert [{ :list, [{ :item, ["test"] }], :ordered }, "\n"] == SimpleMarkdown.Parser.parse("1. test\n", context.rules)
         assert [{ :list, [{ :item, ["a"] }, { :item, ["b"] }], :ordered }] == SimpleMarkdown.Parser.parse("1. a\n2. b", context.rules)
 
+        assert [{ :list, [{ :item, ["tést"] }], :unordered }] == SimpleMarkdown.Parser.parse("* tést")
         assert [{ :list, [{ :item, ["test"] }], :unordered }] == SimpleMarkdown.Parser.parse("* test")
         assert [{ :list, [{ :item, ["test"] }], :unordered }] == SimpleMarkdown.Parser.parse("* test\n")
         assert [{ :list, [{ :item, ["a"] }, { :item, ["b"] }], :unordered }] == SimpleMarkdown.Parser.parse("* a\n* b")
@@ -156,6 +165,7 @@ defmodule SimpleMarkdownParserTest do
     @tag attribute: :preformatted_code
     test "parsing preformatted code", context do
         assert [{ :preformatted_code, ["test"] }] == SimpleMarkdown.Parser.parse("    test", context.rules)
+        assert [{ :preformatted_code, ["tést"] }] == SimpleMarkdown.Parser.parse("    tést", context.rules)
         assert [{ :preformatted_code, ["test\n    test"] }] == SimpleMarkdown.Parser.parse("    test\n        test", context.rules)
         assert [{ :preformatted_code, ["test\n\ttest"] }] == SimpleMarkdown.Parser.parse("\ttest\n\t\ttest", context.rules)
         assert ["```test```"] == SimpleMarkdown.Parser.parse("```test```", context.rules)
@@ -177,6 +187,7 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :preformatted_code, ["_test_\n    test"] }] == SimpleMarkdown.Parser.parse("```\n_test_\n    test\n```")
         assert [{ :preformatted_code, ["_test_\n\ttest"] }] == SimpleMarkdown.Parser.parse("```\n_test_\n\ttest```")
         assert [{ :preformatted_code, ["    test"], :'_test_' }] == SimpleMarkdown.Parser.parse("```_test_\n    test\n```")
+        assert [{ :preformatted_code, ["    tést"], :'_test_' }] == SimpleMarkdown.Parser.parse("```_test_\n    tést\n```")
     end
 
     @tag attribute: :paragraph
@@ -190,6 +201,7 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :paragraph, ["test test"] }] == SimpleMarkdown.Parser.parse("test test")
         assert [{ :paragraph, ["test", "test"] }] == SimpleMarkdown.Parser.parse("test\ntest")
         assert [{ :paragraph, ["test"] }, { :paragraph, ["test"] }] == SimpleMarkdown.Parser.parse("test\n\ntest")
+        assert [{ :paragraph, ["tést"] }, { :paragraph, ["test"] }] == SimpleMarkdown.Parser.parse("tést\n\ntest")
     end
 
     @tag attribute: :blockquote
@@ -209,11 +221,13 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :paragraph, [{ :blockquote, ["test", { :blockquote, ["stuff"] }], }] }] == SimpleMarkdown.Parser.parse("> test\n> > stuff")
         assert [{ :paragraph, [{ :blockquote, ["test", { :blockquote, ["stuff"] }, "blah"], }] }] == SimpleMarkdown.Parser.parse("> test\n> > stuff\n> blah")
         assert [{ :paragraph, [{ :blockquote, ["test", { :blockquote, ["stuff", "again"] }, "blah"], }] }] == SimpleMarkdown.Parser.parse("> test\n> > stuff\n> > again\n> blah")
+        assert [{ :paragraph, [{ :blockquote, ["tést", { :blockquote, ["stuff", "again"] }, "blah"], }] }] == SimpleMarkdown.Parser.parse("> tést\n> > stuff\n> > again\n> blah")
     end
 
     @tag attribute: :link
     test "parsing link", context do
         assert [{ :link, ["test"], "example.com" }] == SimpleMarkdown.Parser.parse("[test](example.com)", context.rules)
+        assert [{ :link, ["tést"], "éxample.com" }] == SimpleMarkdown.Parser.parse("[tést](éxample.com)", context.rules)
 
         assert [{ :paragraph, [{ :link, ["test"], "example.com" }] }] == SimpleMarkdown.Parser.parse("[test](example.com)")
         assert [{ :paragraph, [{ :link, [{ :emphasis, ["test"], :regular }], "example.com" }] }] == SimpleMarkdown.Parser.parse("[_test_](example.com)")
@@ -222,6 +236,7 @@ defmodule SimpleMarkdownParserTest do
     @tag attribute: :image
     test "parsing image", context do
         assert [{ :image, ["test"], "example.com/image.jpg" }] == SimpleMarkdown.Parser.parse("![test](example.com/image.jpg)", context.rules)
+        assert [{ :image, ["tést"], "éxample.com/image.jpg" }] == SimpleMarkdown.Parser.parse("![tést](éxample.com/image.jpg)", context.rules)
 
         assert [{ :paragraph, [{ :image, ["test"], "example.com/image.jpg" }] }] == SimpleMarkdown.Parser.parse("![test](example.com/image.jpg)")
         assert [{ :paragraph, [{ :image, [{ :emphasis, ["test"], :regular }], "example.com/image.jpg" }] }] == SimpleMarkdown.Parser.parse("![_test_](example.com/image.jpg)")
@@ -230,6 +245,7 @@ defmodule SimpleMarkdownParserTest do
     @tag attribute: :code
     test "parsing code", context do
         assert [{ :code, ["test"] }] == SimpleMarkdown.Parser.parse("`test`", context.rules)
+        assert [{ :code, ["tést"] }] == SimpleMarkdown.Parser.parse("`tést`", context.rules)
 
         assert [{ :paragraph, [{ :code, ["test"] }] }] == SimpleMarkdown.Parser.parse("`test`")
         assert [{ :paragraph, [{ :code, ["_test_"] }] }] == SimpleMarkdown.Parser.parse("`_test_`")

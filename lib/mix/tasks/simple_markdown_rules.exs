@@ -14,8 +14,8 @@ config :simple_markdown,
             match: ~r/\A(.*\|.*)\n((\|?[ :-]*?-[ :-]*){1,}).*((\n.*\|.*)*)/,
             capture: 4,
             option: fn input, i = [_, { title_index, title_length }, { align_index, align_length }|_] ->
-                titles = String.slice(input, title_index, title_length) |> String.split("|", trim: true)
-                aligns = String.slice(input, align_index, align_length) |> String.split("|", trim: true) |> Enum.map(fn
+                titles = binary_part(input, title_index, title_length) |> String.split("|", trim: true)
+                aligns = binary_part(input, align_index, align_length) |> String.split("|", trim: true) |> Enum.map(fn
                     ":" <> align -> if String.last(align) == ":", do: :center, else: :left
                     align -> if String.last(align) == ":", do: :right, else: :default
                 end)
@@ -33,7 +33,7 @@ config :simple_markdown,
             match: ~r/\A((\|?[ :-]*?-[ :-]*){1,}).*((\n.*\|.*)+)/,
             capture: 3,
             option: fn input, [_, { align_index, align_length }|_] ->
-                String.slice(input, align_index, align_length) |> String.split("|", trim: true) |> Enum.map(fn
+                binary_part(input, align_index, align_length) |> String.split("|", trim: true) |> Enum.map(fn
                     ":" <> align -> if String.last(align) == ":", do: :center, else: :left
                     align -> if String.last(align) == ":", do: :right, else: :default
                 end)
@@ -51,7 +51,7 @@ config :simple_markdown,
         preformatted_code: %{
             match: ~r/\A`{3}\h*?(\S+)\h*?\n(.*?)`{3}/s,
             option: fn input, [_, { syntax_index, syntax_length }|_] ->
-                String.slice(input, syntax_index, syntax_length) |> String.to_atom
+                binary_part(input, syntax_index, syntax_length) |> String.to_atom
             end,
             format: &String.replace_suffix(&1, "\n", ""),
             rules: []
@@ -64,7 +64,7 @@ config :simple_markdown,
         emphasis: %{ match: ~r/\A\*(.+?)\*/, option: :regular, exclude: { :emphasis, :regular } },
         emphasis: %{ match: ~r/\A_(.+?)_/, option: :regular, exclude: { :emphasis, :regular } },
         blockquote: %{ match: ~r/\A>.*(\n([[:blank:]]|>).*)*/, capture: 0, format: &String.replace(&1, ~r/^> /m, ""), exclude: nil }, #(Regex.scan(~r/(?<=> ).*/, &1) |> Enum.join("\n")) },
-        link: %{ match: ~r/\A\[(.*?)\]\((.*?)\)/, capture: 1, option: fn input, [_, _, { index, length }] -> String.slice(input, index, length) end },
-        image: %{ match: ~r/\A!\[(.*?)\]\((.*?)\)/, capture: 1, option: fn input, [_, _, { index, length }] -> String.slice(input, index, length) end },
+        link: %{ match: ~r/\A\[(.*?)\]\((.*?)\)/, capture: 1, option: fn input, [_, _, { index, length }] -> binary_part(input, index, length) end },
+        image: %{ match: ~r/\A!\[(.*?)\]\((.*?)\)/, capture: 1, option: fn input, [_, _, { index, length }] -> binary_part(input, index, length) end },
         code: %{ match: ~r/\A`([^`].*?)`/, rules: [] }
     ]
