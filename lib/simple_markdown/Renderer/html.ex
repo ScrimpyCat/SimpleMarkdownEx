@@ -83,6 +83,15 @@ defimpl SimpleMarkdown.Renderer.HTML, for: SimpleMarkdown.Attribute.Row do
     def render(%{ input: input }), do: "<tr>#{Enum.reduce(input, "", &(&2 <> "<td>#{SimpleMarkdown.Renderer.HTML.render(&1)}</td>"))}</tr>"
 end
 
+defimpl SimpleMarkdown.Renderer.HTML, for: SimpleMarkdown.Attribute.TaskList do
+    def render(%{ input: input }), do: "<ul>#{SimpleMarkdown.Renderer.HTML.render(input)}</ul>"
+end
+
+defimpl SimpleMarkdown.Renderer.HTML, for: SimpleMarkdown.Attribute.Task do
+    def render(%{ input: input, option: :deselected }), do: "<li><input type=\"checkbox\" disabled>#{SimpleMarkdown.Renderer.HTML.render(input)}</li>"
+    def render(%{ input: input, option: :selected }), do: "<li><input type=\"checkbox\" checked disabled>#{SimpleMarkdown.Renderer.HTML.render(input)}</li>"
+end
+
 defimpl SimpleMarkdown.Renderer.HTML, for: SimpleMarkdown.Attribute.List do
     def render(%{ input: input, option: :unordered }), do: "<ul>#{SimpleMarkdown.Renderer.HTML.render(input)}</ul>"
     def render(%{ input: input, option: :ordered }), do: "<ol>#{SimpleMarkdown.Renderer.HTML.render(input)}</ol>"

@@ -143,6 +143,25 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :table, [row: ["1", "2", "3", "4"], row: ["11", "22", "33", "44"]], [:default, :center, :right, :left] }] == SimpleMarkdown.Parser.parse("---|:---:|---:|:---\n1|2|3|4\n11|22|33|44")
     end
 
+    @tag attribute: :task_list
+    test "parsing task list", context do
+        assert [{ :task_list, [{ :task, ["test"], :deselected }] }] == SimpleMarkdown.Parser.parse("- [ ] test", context.rules)
+        assert [{ :task_list, [{ :task, ["tést"], :deselected }] }] == SimpleMarkdown.Parser.parse("- [ ] tést", context.rules)
+        assert [{ :task_list, [{ :task, ["test"], :deselected }] }, "\n"] == SimpleMarkdown.Parser.parse("- [ ] test\n", context.rules)
+        assert [{ :task_list, [{ :task, ["a"], :deselected }, "\n", { :task, ["b"], :selected }] }] == SimpleMarkdown.Parser.parse("- [ ] a\n- [x] b", context.rules)
+        assert [{ :task_list, [{ :task, ["test"], :selected }] }] == SimpleMarkdown.Parser.parse("- [x] test", context.rules)
+        assert [{ :task_list, [{ :task, ["test"], :selected }] }, "\n"] == SimpleMarkdown.Parser.parse("- [x] test\n", context.rules)
+        assert [{ :task_list, [{ :task, ["a"], :selected }, "\n", { :task, ["b"], :deselected }] }] == SimpleMarkdown.Parser.parse("- [x] a\n- [ ] b", context.rules)
+
+        assert [{ :task_list, [{ :task, ["tést"], :deselected }] }] == SimpleMarkdown.Parser.parse("- [ ] tést")
+        assert [{ :task_list, [{ :task, ["test"], :deselected }] }] == SimpleMarkdown.Parser.parse("- [ ] test")
+        assert [{ :task_list, [{ :task, ["test"], :deselected }] }] == SimpleMarkdown.Parser.parse("- [ ] test\n")
+        assert [{ :task_list, [{ :task, ["a"], :deselected }, { :task, ["b"], :selected }] }] == SimpleMarkdown.Parser.parse("- [ ] a\n- [x] b")
+        assert [{ :task_list, [{ :task, ["test"], :selected }] }] == SimpleMarkdown.Parser.parse("- [x] test")
+        assert [{ :task_list, [{ :task, ["test"], :selected }] }] == SimpleMarkdown.Parser.parse("- [x] test\n")
+        assert [{ :task_list, [{ :task, ["a"], :selected }, { :task, ["b"], :deselected }] }] == SimpleMarkdown.Parser.parse("- [x] a\n- [ ] b")
+    end
+
     @tag attribute: :list
     test "parsing list", context do
         assert [{ :list, [{ :item, ["test"] }], :unordered }] == SimpleMarkdown.Parser.parse("* test", context.rules)
@@ -264,10 +283,10 @@ defmodule SimpleMarkdownParserTest do
         Paragraphs are separated
         by a blank line.
 
-        Two spaces at the end of a line leave a  
+        Two spaces at the end of a line leave a#{"  "}
         line break.
 
-        Text attributes _italic_, 
+        Text attributes _italic_,#{" "}
         **bold**, `monospace`.
 
         Bullet list:
