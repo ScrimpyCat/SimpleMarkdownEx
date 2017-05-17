@@ -30,6 +30,10 @@ defmodule SimpleMarkdownRendererHTMLTest do
         assert "<table><tbody><tr><td>1</td><td style=\"text-align: center;\">2</td><td style=\"text-align: right;\">3</td><td style=\"text-align: left;\">4</td></tr><tr><td>11</td><td style=\"text-align: center;\">22</td><td style=\"text-align: right;\">33</td><td style=\"text-align: left;\">44</td></tr></tbody></table>" == [{ :table, [row: ["1", "2", "3", "4"], row: ["11", "22", "33", "44"]], [:default, :center, :right, :left] }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
     end
 
+    test "rendering task list" do
+        assert "<ul><li><input type=\"checkbox\" disabled>a</li><li><input type=\"checkbox\" checked disabled>b</li></ul>" == [{ :task_list, [{ :task, ["a"], :deselected }, { :task, ["b"], :selected }] }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
+    end
+
     test "rendering list" do
         assert "<ul><li>a</li><li>b</li></ul>" == [{ :list, [{ :item, ["a"] }, { :item, ["b"] }], :unordered }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
         assert "<ol><li>a</li><li>b</li></ol>" == [{ :list, [{ :item, ["a"] }, { :item, ["b"] }], :ordered }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
