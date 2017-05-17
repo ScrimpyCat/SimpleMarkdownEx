@@ -10,9 +10,9 @@ defmodule SimpleMarkdown.Mixfile do
             build_embedded: Mix.env == :prod,
             start_permanent: Mix.env == :prod,
             consolidate_protocols: Mix.env != :test,
-            deps: deps,
+            deps: deps(),
             dialyzer: [plt_add_deps: true],
-            package: package
+            package: package()
         ]
     end
 
