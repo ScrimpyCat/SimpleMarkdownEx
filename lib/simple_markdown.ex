@@ -47,7 +47,7 @@ defmodule SimpleMarkdown do
       used is the one provided in the rules config, and the default
       renderer is the HTML renderer.
     """
-    @spec convert(String.t, [parser: [Parsey.ast], render: ([SimpleMarkdown.attribute | String.t] -> String.t)]) :: String.t
+    @spec convert(String.t, [parser: [Parsey.rule], render: ([SimpleMarkdown.attribute | String.t] -> String.t)]) :: String.t
     def convert(input, options \\ []) do
         options = Keyword.merge([parser: Application.fetch_env!(:simple_markdown, :rules), render: &SimpleMarkdown.Renderer.HTML.render/1], options)
         SimpleMarkdown.Parser.parse(input, options[:parser]) |> ast_to_structs |> options[:render].()
@@ -58,7 +58,7 @@ defmodule SimpleMarkdown do
       is provided for compatibility with ExDoc and similar markdown
       processors.
     """
-    @spec to_html(String.t, [parser: [Parsey.ast], render: ([SimpleMarkdown.attribute | String.t] -> String.t)]) :: String.t
+    @spec to_html(String.t, [parser: [Parsey.rule], render: ([SimpleMarkdown.attribute | String.t] -> String.t)]) :: String.t
     def to_html(input, options \\ [render: &SimpleMarkdown.Renderer.HTML.render/1]), do: convert(input, options)
 
     @doc """
