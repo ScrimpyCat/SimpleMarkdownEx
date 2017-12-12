@@ -171,8 +171,10 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :list, [{ :item, ["a\n"] }, { :item, ["b\n"] }], :unordered }, "\nc"] == SimpleMarkdown.Parser.parse("* a\n* b\n\nc", context.rules)
         assert [{ :list, [{ :item, ["a\nc * d\n"] }, { :item, ["b"] }], :unordered }] == SimpleMarkdown.Parser.parse("* a\nc * d\n * b", context.rules)
         assert [{ :list, [{ :item, ["test"] }], :ordered }] == SimpleMarkdown.Parser.parse("1. test", context.rules)
-        assert [{ :list, [{ :item, ["test"] }], :ordered }, "\n"] == SimpleMarkdown.Parser.parse("1. test\n", context.rules)
-        assert [{ :list, [{ :item, ["a"] }, { :item, ["b"] }], :ordered }] == SimpleMarkdown.Parser.parse("1. a\n2. b", context.rules)
+        assert [{ :list, [{ :item, ["test\n"] }], :ordered }] == SimpleMarkdown.Parser.parse("1. test\n", context.rules)
+        assert [{ :list, [{ :item, ["a\n"] }, { :item, ["b"] }], :ordered }] == SimpleMarkdown.Parser.parse("1. a\n2. b", context.rules)
+        assert [{ :list, [{ :item, ["a\n"] }, { :item, ["b\n"] }], :ordered }, "\nc"] == SimpleMarkdown.Parser.parse("1. a\n2. b\n\nc", context.rules)
+        assert [{ :list, [{ :item, ["a\n2c d\n"] }, { :item, ["b"] }], :ordered }] == SimpleMarkdown.Parser.parse("1. a\n2c d\n 2. b", context.rules)
 
         assert [{ :list, [{ :item, ["tést"] }], :unordered }] == SimpleMarkdown.Parser.parse("* tést")
         assert [{ :list, [{ :item, ["test"] }], :unordered }] == SimpleMarkdown.Parser.parse("* test")
