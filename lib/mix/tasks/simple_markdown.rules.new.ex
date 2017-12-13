@@ -12,6 +12,8 @@ defmodule Mix.Tasks.SimpleMarkdown.Rules.New do
       rules.
     """
 
+    use Mix.Task
+
     def run(_) do
         if File.cp_r!(Path.join(__DIR__, "simple_markdown_rules.exs"), "config/simple_markdown_rules.exs", fn _, destination ->
             Mix.shell.yes?("Do you want to replace the file at #{destination}")
