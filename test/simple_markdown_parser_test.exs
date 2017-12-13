@@ -175,6 +175,7 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :list, [{ :item, ["a\n"] }, { :item, ["b"] }], :ordered }] == SimpleMarkdown.Parser.parse("1. a\n2. b", context.rules)
         assert [{ :list, [{ :item, ["a\n"] }, { :item, ["b\n"] }], :ordered }, "\nc"] == SimpleMarkdown.Parser.parse("1. a\n2. b\n\nc", context.rules)
         assert [{ :list, [{ :item, ["a\n2c d\n"] }, { :item, ["b"] }], :ordered }] == SimpleMarkdown.Parser.parse("1. a\n2c d\n 2. b", context.rules)
+        assert [{ :list, [{ :item, ["a\nc 2. d\n"] }, { :item, ["b"] }], :ordered }] == SimpleMarkdown.Parser.parse("1. a\nc 2. d\n 2. b", context.rules)
 
         assert [{ :list, [{ :item, ["tést"] }], :unordered }] == SimpleMarkdown.Parser.parse("* tést")
         assert [{ :list, [{ :item, ["test"] }], :unordered }] == SimpleMarkdown.Parser.parse("* test")
