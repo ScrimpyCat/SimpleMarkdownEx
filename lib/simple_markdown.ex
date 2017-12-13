@@ -53,11 +53,8 @@ defmodule SimpleMarkdown do
         SimpleMarkdown.Parser.parse(input, options[:parser]) |> ast_to_structs |> options[:render].()
     end
 
-    @doc """
-      Convert the text input into the rendered HTML output. This function
-      is provided for compatibility with ExDoc and similar markdown
-      processors.
-    """
+    @doc false
+    # deprecated 0.5.0
     @spec to_html(String.t, [parser: [Parsey.rule], render: ([SimpleMarkdown.attribute | String.t] -> String.t)]) :: String.t
     def to_html(input, options \\ [render: &SimpleMarkdown.Renderer.HTML.render/1]), do: convert(input, options)
 
