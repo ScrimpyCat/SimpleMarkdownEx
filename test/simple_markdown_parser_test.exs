@@ -6,7 +6,7 @@ defmodule SimpleMarkdownParserTest do
         rules = Application.fetch_env!(:simple_markdown, :rules)
 
         rules = if type = context[:attribute] do
-            rules = Enum.filter(rules, fn
+            Enum.filter(rules, fn
                 { ^type, _ } -> true
                 _ -> false
             end)
@@ -322,6 +322,6 @@ defmodule SimpleMarkdownParserTest do
             { :paragraph, ["Numbered list:"] },
             { :list, [item: ["apples"], item: ["oranges"], item: ["pears"]], :ordered },
             { :paragraph, ["A ", { :link, ["link"], "http://example.com" }, "."] }
-        ] == SimpleMarkdown.Parser.parse(input |> String.strip)
+        ] == SimpleMarkdown.Parser.parse(input |> String.trim)
     end
 end
