@@ -169,6 +169,7 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :list, [{ :item, ["test\n"] }], :unordered }] == SimpleMarkdown.Parser.parse("* test\n", context.rules)
         assert [{ :list, [{ :item, ["a\n"] }, { :item, ["b"] }], :unordered }] == SimpleMarkdown.Parser.parse("* a\n* b", context.rules)
         assert [{ :list, [{ :item, ["a\n"] }, { :item, ["b\n"] }], :unordered }, "\nc"] == SimpleMarkdown.Parser.parse("* a\n* b\n\nc", context.rules)
+        assert [{ :list, [{ :item, ["a\n*c d\n"] }, { :item, ["b"] }], :unordered }] == SimpleMarkdown.Parser.parse("* a\n*c d\n * b", context.rules)
         assert [{ :list, [{ :item, ["a\nc * d\n"] }, { :item, ["b"] }], :unordered }] == SimpleMarkdown.Parser.parse("* a\nc * d\n * b", context.rules)
         assert [{ :list, [{ :item, ["test"] }], :ordered }] == SimpleMarkdown.Parser.parse("1. test", context.rules)
         assert [{ :list, [{ :item, ["test\n"] }], :ordered }] == SimpleMarkdown.Parser.parse("1. test\n", context.rules)
