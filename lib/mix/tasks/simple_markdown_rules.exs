@@ -65,7 +65,7 @@ config :simple_markdown,
         emphasis: %{ match: ~r/\A\*(.+?)\*/, option: :regular, exclude: { :emphasis, :regular } },
         emphasis: %{ match: ~r/\A_(.+?)_/, option: :regular, exclude: { :emphasis, :regular } },
         blockquote: %{ match: ~r/\A>.*(\n([[:blank:]]|>).*)*/, capture: 0, format: &String.replace(&1, ~r/^> ?/m, ""), exclude: nil }, #(Regex.scan(~r/(?<=> ).*/, &1) |> Enum.join("\n")) },
-        link: %{ match: ~r/\A\[(.*?)\]\((.*?)\)/, capture: 1, option: fn input, [_, _, { index, length }] -> binary_part(input, index, length) end },
-        image: %{ match: ~r/\A!\[(.*?)\]\((.*?)\)/, capture: 1, option: fn input, [_, _, { index, length }] -> binary_part(input, index, length) end },
+        link: %{ match: ~r/\A\[(.*)\]\((.*?)\)/, capture: 1, option: fn input, [_, _, { index, length }] -> binary_part(input, index, length) end },
+        image: %{ match: ~r/\A!\[(.*)\]\((.*?)\)/, capture: 1, option: fn input, [_, _, { index, length }] -> binary_part(input, index, length) end },
         code: %{ match: ~r/\A`([^`].*?)`/, rules: [] }
     ]
