@@ -256,6 +256,7 @@ defmodule SimpleMarkdownParserTest do
 
         assert [{ :paragraph, [{ :link, ["test"], "example.com" }] }] == SimpleMarkdown.Parser.parse("[test](example.com)")
         assert [{ :paragraph, [{ :link, [{ :emphasis, ["test"], :regular }], "example.com" }] }] == SimpleMarkdown.Parser.parse("[_test_](example.com)")
+        assert [{ :paragraph, [{ :link, ["foo"], "example.com/foo" }, " ", { :link, ["bar"], "example.com/bar" }] }] == SimpleMarkdown.Parser.parse("[foo](example.com/foo) [bar](example.com/bar)")
         assert [{ :paragraph, [{ :link, [{ :image, ["test"], "example.com/image.jpg" }], "example.com" }] }] == SimpleMarkdown.Parser.parse("[![test](example.com/image.jpg)](example.com)")
     end
 
