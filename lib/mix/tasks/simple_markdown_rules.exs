@@ -48,7 +48,7 @@ config :simple_markdown,
         task_list: %{ match: ~r/\A- \[( |x|X)\] .*(\n- \[( |x|X)\] .*)*/, capture: 0, exclude: [:paragraph, :task_list], include: [task: %{ match: ~r/\A- \[ \] (.*)/, option: :deselected }, task: %{ match: ~r/\A- \[(x|X)\] (.*)/, option: :selected }] },
         list: %{ match: ~r/\A\*[[:blank:]]+([[:blank:]]*?[^[:blank:]\n].*?(\n|$))*/, capture: 0, option: :unordered, exclude: [:paragraph, :list], include: [item: %{ match: ~r/(?<=\*[[:blank:]])([[:blank:]]*?([^[:blank:]\*\n]|[^[:blank:]\n]\**?[^[:blank:]]).*?(\n|$))+/, capture: 0 }] },
         list: %{ match: ~r/\A[[:digit:]]\.[[:blank:]]+([[:blank:]]*?[^[:blank:]\n].*?(\n|$))*/, capture: 0, option: :ordered, exclude: [:paragraph, :list], include: [item: %{ match: ~r/(?<=[[:digit:]]\.[[:blank:]])([[:blank:]]*?([^[:blank:][:digit:]\n]|[^[:blank:]\n][[:digit:]]*?[^\.]).*?(\n|$))+/, capture: 0 }] },
-        preformatted_code: %{ match: ~r/\A(\n*( {4,}|\t{1,}).*)+/, capture: 0, format: &(Regex.scan(~r/((?<=    )|(?<=\t)).*/, &1) |> Enum.join("\n")), rules: [] },
+        preformatted_code: %{ match: ~r/\A(\n*( {4,}|\t{1,}).*)+/, capture: 0, format: &String.replace(&1, ~r/^(    |\t)/m, ""), rules: [] },
         preformatted_code: %{
             match: ~r/\A`{3}\h*?(\S+)\h*?\n(.*?)`{3}/s,
             option: fn input, [_, { syntax_index, syntax_length }|_] ->

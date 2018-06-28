@@ -193,8 +193,10 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :preformatted_code, ["tést"] }] == SimpleMarkdown.Parser.parse("    tést", context.rules)
         assert [{ :preformatted_code, ["test\n    test"] }] == SimpleMarkdown.Parser.parse("    test\n        test", context.rules)
         assert [{ :preformatted_code, ["test\n\ttest"] }] == SimpleMarkdown.Parser.parse("\ttest\n\t\ttest", context.rules)
+        assert [{ :preformatted_code, ["test\n\ntest"] }] == SimpleMarkdown.Parser.parse("\ttest\n\t\n\ttest", context.rules)
         assert ["```test```"] == SimpleMarkdown.Parser.parse("```test```", context.rules)
         assert [{ :preformatted_code, ["test"] }] == SimpleMarkdown.Parser.parse("```\ntest```", context.rules)
+        assert [{ :preformatted_code, ["test\n\ntest"] }] == SimpleMarkdown.Parser.parse("```\ntest\n\ntest```", context.rules)
         assert [{ :preformatted_code, ["    test"], :test }] == SimpleMarkdown.Parser.parse("```test\n    test\n```", context.rules)
         assert [{ :preformatted_code, ["\ttest"], :test }] == SimpleMarkdown.Parser.parse("```test\n\ttest```", context.rules)
         assert [{ :preformatted_code, ["    test"] }] == SimpleMarkdown.Parser.parse("```te st\n    test\n```", context.rules)
@@ -205,7 +207,9 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :preformatted_code, ["_test_"] }] == SimpleMarkdown.Parser.parse("    _test_")
         assert [{ :preformatted_code, ["_test_\n    test"] }] == SimpleMarkdown.Parser.parse("    _test_\n        test")
         assert [{ :preformatted_code, ["_test_\n\ttest"] }] == SimpleMarkdown.Parser.parse("\t_test_\n\t\ttest")
+        assert [{ :preformatted_code, ["test\n\ntest"] }] == SimpleMarkdown.Parser.parse("\ttest\n\t\n\ttest")
         assert [{:paragraph, ["``", { :code, ["test"] }, "``"] }] == SimpleMarkdown.Parser.parse("```test```")
+        assert [{ :preformatted_code, ["test\n\ntest"] }] == SimpleMarkdown.Parser.parse("```\ntest\n\ntest```")
         assert [{ :preformatted_code, ["    test"], :test }] == SimpleMarkdown.Parser.parse("```test\n    test\n```")
         assert [{ :preformatted_code, ["\ttest"], :test }] == SimpleMarkdown.Parser.parse("```test\n\ttest```")
         assert [{ :preformatted_code, ["_test_"] }] == SimpleMarkdown.Parser.parse("```\n_test_```")
@@ -213,6 +217,30 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :preformatted_code, ["_test_\n\ttest"] }] == SimpleMarkdown.Parser.parse("```\n_test_\n\ttest```")
         assert [{ :preformatted_code, ["    test"], :'_test_' }] == SimpleMarkdown.Parser.parse("```_test_\n    test\n```")
         assert [{ :preformatted_code, ["    tést"], :'_test_' }] == SimpleMarkdown.Parser.parse("```_test_\n    tést\n```")
+
+        code = """
+            one
+
+            two
+                three
+            four
+        """ |> String.trim_trailing
+
+        assert [{ :preformatted_code, ["one\n\ntwo\n    three\nfour"] }] == SimpleMarkdown.Parser.parse(code, context.rules)
+        assert [{ :preformatted_code, ["one\n\ntwo\n    three\nfour"] }] == SimpleMarkdown.Parser.parse(code)
+
+        code = """
+        ```
+        one
+
+        two
+            three
+        four
+        ```
+        """ |> String.trim_trailing
+
+        assert [{ :preformatted_code, ["one\n\ntwo\n    three\nfour"] }] == SimpleMarkdown.Parser.parse(code, context.rules)
+        assert [{ :preformatted_code, ["one\n\ntwo\n    three\nfour"] }] == SimpleMarkdown.Parser.parse(code)
     end
 
     @tag attribute: :paragraph
