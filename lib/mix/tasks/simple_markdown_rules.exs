@@ -13,7 +13,7 @@ config :simple_markdown,
         table: %{
             match: ~r/\A(.*\|.*)\n((\|?[ :-]*?-[ :-]*){1,}).*((\n.*\|.*)*)/,
             capture: 4,
-            option: fn input, i = [_, { title_index, title_length }, { align_index, align_length }|_] ->
+            option: fn input, [_, { title_index, title_length }, { align_index, align_length }|_] ->
                 titles = binary_part(input, title_index, title_length) |> String.split("|", trim: true)
                 aligns = binary_part(input, align_index, align_length) |> String.split("|", trim: true) |> Enum.map(fn
                     ":" <> align -> if String.last(align) == ":", do: :center, else: :left
@@ -74,7 +74,7 @@ config :simple_markdown,
                             "](" <> string, :inner_mid, n, fun -> fun.(string, :inner_end, n + 2, fun)
                             ")" <> string, :inner_end, n, fun -> fun.(string, :mid, n + 1, fun)
                             "](" <> string, :mid, n, fun -> fun.(string, :end, n + 2, fun)
-                            ")" <> string, :end, n, _ -> n + 1
+                            ")" <> _, :end, n, _ -> n + 1
                             <<c :: utf8, string :: binary>>, token, n, fun -> fun.(string, token, n + byte_size(to_string([c])), fun)
                             "", _, n, _ -> n
                         end
@@ -103,7 +103,7 @@ config :simple_markdown,
                             "](" <> string, :inner_mid, n, fun -> fun.(string, :inner_end, n + 2, fun)
                             ")" <> string, :inner_end, n, fun -> fun.(string, :mid, n + 1, fun)
                             "](" <> string, :mid, n, fun -> fun.(string, :end, n + 2, fun)
-                            ")" <> string, :end, n, _ -> n + 1
+                            ")" <> _, :end, n, _ -> n + 1
                             <<c :: utf8, string :: binary>>, token, n, fun -> fun.(string, token, n + byte_size(to_string([c])), fun)
                             "", _, n, _ -> n
                         end

@@ -215,8 +215,8 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :preformatted_code, ["_test_"] }] == SimpleMarkdown.Parser.parse("```\n_test_```")
         assert [{ :preformatted_code, ["_test_\n    test"] }] == SimpleMarkdown.Parser.parse("```\n_test_\n    test\n```")
         assert [{ :preformatted_code, ["_test_\n\ttest"] }] == SimpleMarkdown.Parser.parse("```\n_test_\n\ttest```")
-        assert [{ :preformatted_code, ["    test"], :'_test_' }] == SimpleMarkdown.Parser.parse("```_test_\n    test\n```")
-        assert [{ :preformatted_code, ["    tést"], :'_test_' }] == SimpleMarkdown.Parser.parse("```_test_\n    tést\n```")
+        assert [{ :preformatted_code, ["    test"], :_test_ }] == SimpleMarkdown.Parser.parse("```_test_\n    test\n```")
+        assert [{ :preformatted_code, ["    tést"], :_test_ }] == SimpleMarkdown.Parser.parse("```_test_\n    tést\n```")
 
         code = """
             one
