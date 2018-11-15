@@ -14,7 +14,7 @@ config :simple_markdown,
             match: ~r/\A(.*\|.*)\n((\|?[ :-]*?-[ :-]*){1,}).*((\n.*\|.*)*)/,
             capture: 4,
             option: fn input, [_, { title_index, title_length }, { align_index, align_length }|_] ->
-                titles = binary_part(input, title_index, title_length) |> String.split("|", trim: true)
+                titles = binary_part(input, title_index, title_length) |> String.split("|", trim: true) |> Enum.map(&String.trim/1)
                 aligns = binary_part(input, align_index, align_length) |> String.split("|", trim: true) |> Enum.map(fn
                     ":" <> align -> if String.last(align) == ":", do: :center, else: :left
                     align -> if String.last(align) == ":", do: :right, else: :default
@@ -26,6 +26,7 @@ config :simple_markdown,
             include: [row: %{
                 match: ~r/\A(.*\|.*)+/,
                 capture: 0,
+                format: &String.trim(&1),
                 include: [separator: %{ match: ~r/\A\|/, ignore: true }]
             }]
         },
@@ -42,6 +43,7 @@ config :simple_markdown,
             include: [row: %{
                 match: ~r/\A(.*\|.*)+/,
                 capture: 0,
+                format: &String.trim(&1),
                 include: [separator: %{ match: ~r/\A\|/, ignore: true }]
             }]
         },
