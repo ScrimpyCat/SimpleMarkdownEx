@@ -64,7 +64,8 @@ config :simple_markdown,
         emphasis: %{ match: ~r/\A__(.+?)__/, option: :strong, exclude: { :emphasis, :strong } },
         emphasis: %{ match: ~r/\A\*(.+?)\*/, option: :regular, exclude: { :emphasis, :regular } },
         emphasis: %{ match: ~r/\A_(.+?)_/, option: :regular, exclude: { :emphasis, :regular } },
-        blockquote: %{ match: ~r/\A>.*(\n([[:blank:]]|>).*)*/, capture: 0, format: &String.replace(&1, ~r/^> ?/m, ""), exclude: nil }, #(Regex.scan(~r/(?<=> ).*/, &1) |> Enum.join("\n")) },
+        skip_blockquote: %{ match: ~r/\A[^>]*[^> \n]+.*?>.*(\n([[:blank:]]|>).*)*/, capture: 0, exclude: [:skip_blockquote, :blockquote], skip: true },
+        blockquote: %{ match: ~r/\A>.*(\n([[:blank:]]|>).*)*/, capture: 0, format: &String.replace(&1, ~r/^> ?/m, ""), exclude: nil },
         link: %{
             match: fn
                 "[" <> input ->

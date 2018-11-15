@@ -266,6 +266,7 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :blockquote, ["test\n", { :blockquote, ["stuff"] }], }] == SimpleMarkdown.Parser.parse("> test\n> > stuff", context.rules)
         assert [{ :blockquote, ["test\n", { :blockquote, ["stuff"] }, "\nblah"], }] == SimpleMarkdown.Parser.parse("> test\n> > stuff\n> blah", context.rules)
         assert [{ :blockquote, ["test\n", { :blockquote, ["stuff\nagain"] }, "\nblah"], }] == SimpleMarkdown.Parser.parse("> test\n> > stuff\n> > again\n> blah", context.rules)
+        assert ["foo ", { :blockquote, ["bar"] }] == SimpleMarkdown.Parser.parse("foo > bar", context.rules)
 
         assert [{ :paragraph, [{ :blockquote, ["test"] }] }] == SimpleMarkdown.Parser.parse("> test")
         assert [{ :paragraph, [{ :blockquote, ["test"] }] }] == SimpleMarkdown.Parser.parse("> test\n")
@@ -275,6 +276,7 @@ defmodule SimpleMarkdownParserTest do
         assert [{ :paragraph, [{ :blockquote, ["test", { :blockquote, ["stuff"] }, "blah"], }] }] == SimpleMarkdown.Parser.parse("> test\n> > stuff\n> blah")
         assert [{ :paragraph, [{ :blockquote, ["test", { :blockquote, ["stuff", "again"] }, "blah"], }] }] == SimpleMarkdown.Parser.parse("> test\n> > stuff\n> > again\n> blah")
         assert [{ :paragraph, [{ :blockquote, ["tést", { :blockquote, ["stuff", "again"] }, "blah"], }] }] == SimpleMarkdown.Parser.parse("> tést\n> > stuff\n> > again\n> blah")
+        assert [{ :paragraph, ["foo > bar"] }] == SimpleMarkdown.Parser.parse("foo > bar")
     end
 
     @tag attribute: :link
