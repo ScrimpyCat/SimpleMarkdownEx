@@ -34,11 +34,9 @@ defmodule SimpleMarkdown.Mixfile do
     # Type `mix help deps` for more examples and options
     defp deps do
         [
-            { :parsey, "~> 0.0.2" },
-            { :html_entities, "~> 0.3" },
-            { :earmark, "~> 0.1", only: :dev },
-            { :ex_doc, "~> 0.7", only: :dev }
-        ]
+            { :parsey, "~> 0.0.3" },
+            { :html_entities, "~> 0.3" }
+        ] ++ if(Version.compare(System.version, "1.7.0") == :lt, do: [{ :earmark, "~> 0.1", only: :dev }, { :ex_doc, "~> 0.7", only: :dev }], else: [{ :ex_doc, "~> 0.19", only: :dev, runtime: false }])
     end
 
     defp package do
