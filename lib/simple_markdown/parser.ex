@@ -6,11 +6,16 @@ defmodule SimpleMarkdown.Parser do
       [Parsey docs](https://hexdocs.pm/parsey/api-reference.html).
     """
 
+    { :ok, rules } = Code.string_to_quoted(File.read!(Path.join(__DIR__, "rules.exs")))
+    def default_rules, do: unquote(rules)
+
+    def rules, do: Application.get_env(:simple_markdown, :rules, default_rules())
+
     @doc """
       Parse the string with the rules found in the config file.
     """
     @spec parse(String.t) :: [Parsey.ast]
-    def parse(input), do: parse input, Application.fetch_env!(:simple_markdown, :rules)
+    def parse(input), do: parse input, rules()
 
     @doc """
       Parse the string with the specified ruleset.

@@ -3,7 +3,7 @@ defmodule SimpleMarkdownParserTest do
     doctest SimpleMarkdown.Parser
 
     setup context do
-        rules = Application.fetch_env!(:simple_markdown, :rules)
+        rules = SimpleMarkdown.Parser.rules
 
         rules = if type = context[:attribute] do
             Enum.filter(rules, fn

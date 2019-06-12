@@ -49,7 +49,7 @@ defmodule SimpleMarkdown do
     """
     @spec convert(String.t, [parser: [Parsey.rule], render: ([SimpleMarkdown.attribute | String.t] -> String.t)]) :: String.t
     def convert(input, options \\ []) do
-        options = Keyword.merge([parser: Application.get_env(:simple_markdown, :rules, []), render: &SimpleMarkdown.Renderer.HTML.render/1], options)
+        options = Keyword.merge([parser: SimpleMarkdown.Parser.rules, render: &SimpleMarkdown.Renderer.HTML.render/1], options)
         SimpleMarkdown.Parser.parse(input, options[:parser]) |> ast_to_structs |> options[:render].()
     end
 
