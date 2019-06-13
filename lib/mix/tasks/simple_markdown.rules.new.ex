@@ -24,7 +24,7 @@ defmodule Mix.Tasks.SimpleMarkdown.Rules.New do
         write_config(destination, formatter)
     end
 
-    defp write_config(destination, formatter \\ &(&1)) do
+    defp write_config(destination, formatter) do
         with exists <- File.exists?(destination),
              true <- if(exists, do: Mix.shell.yes?("Do you want to replace the file at #{destination}"), else: true) do
                 config = """
