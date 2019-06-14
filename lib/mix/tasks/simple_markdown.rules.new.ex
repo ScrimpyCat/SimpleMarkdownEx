@@ -3,6 +3,13 @@ defmodule Mix.Tasks.SimpleMarkdown.Rules.New do
     @moduledoc """
       Generates the standard rules config.
 
+        mix simple_markdown.rules.new#{if(Version.compare(System.version, "1.6.0") != :lt, do: " [--format] ", else: " ")}[-o PATH]
+
+      #{if(Version.compare(System.version, "1.6.0") != :lt, do: "A `--format` option can be used to indicate that the output be formatted according to the auto formatter.", else: "")}
+
+      A `-o` option can be used to specify the file to be written. Defaults
+      to `"config/simple_markdown_rules.exs"` if a path is not provided.
+
       The rules config should be imported into the app's config.exs
         import_config "simple_markdown_rules.exs"
 
@@ -17,7 +24,7 @@ defmodule Mix.Tasks.SimpleMarkdown.Rules.New do
     def run(env) do
         { _, { destination, formatter } } = Enum.reduce(env, { nil, { "config/simple_markdown_rules.exs", &(&1) } }, fn
             destination, { :destination, { _, formatter } } -> { nil, { destination, formatter } }
-            "--destination", { _, args } -> { :destination, args }
+            "-o", { _, args } -> { :destination, args }
             "--format", { _, { destination, formatter } } -> { nil, { destination, if(Version.compare(System.version, "1.6.0") != :lt, do: &Code.format_string!/1, else: formatter) } }
         end)
 
