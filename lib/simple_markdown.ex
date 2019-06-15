@@ -2,8 +2,9 @@ defmodule SimpleMarkdown do
     @moduledoc """
       Converts markdown into the specified rendered output.
 
-      When first using the library the first thing to do is usually to
-      generate the base rule config.
+      While this step is completely optional, if you need to configure
+      any rules the first thing to do is usually to generate the base
+      rule config.
         $ mix simple_markdown.rules.new
 
       And then importing the config in your config.exs:

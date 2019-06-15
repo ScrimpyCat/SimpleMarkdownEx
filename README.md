@@ -1,8 +1,9 @@
 # SimpleMarkdownEx
 A simple and extendable Markdown to HTML converter for Elixir.
 
-When first using the library the first thing to do is usually to
-generate the base rule config.
+While this step is completely optional, if you need to configure
+any rules the first thing to do is usually to generate the base
+rule config.
 ```bash
 $ mix simple_markdown.rules.new
 ```
