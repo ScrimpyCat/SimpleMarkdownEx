@@ -25,10 +25,16 @@ defmodule Mix.Tasks.SimpleMarkdown.Rules.New do
         { _, { destination, formatter } } = Enum.reduce(env, { nil, { "config/simple_markdown_rules.exs", &(&1) } }, fn
             destination, { :destination, { _, formatter } } -> { nil, { destination, formatter } }
             "-o", { _, args } -> { :destination, args }
-            "--format", { _, { destination, formatter } } -> { nil, { destination, if(Version.compare(System.version, "1.6.0") != :lt, do: &Code.format_string!/1, else: formatter) } }
+            "--format", { _, { destination, formatter } } -> { nil, { destination, if(Version.compare(System.version, "1.6.0") != :lt, do: &Code.format_string!(IO.iodata_to_binary(&1)), else: formatter) } }
         end)
 
         write_config(destination, formatter)
+    end
+
+    defp get_ruleset() do
+        Path.join(__DIR__, "../../simple_markdown/rules.exs")
+        |> File.stream!
+        |> Enum.map(&(["    ", &1]))
     end
 
     defp write_config(destination, formatter) do
@@ -38,8 +44,11 @@ defmodule Mix.Tasks.SimpleMarkdown.Rules.New do
                 use Mix.Config
 
                 config :simple_markdown,
-                    rules: #{File.read!(Path.join(__DIR__, "../../simple_markdown/rules.exs"))}
-                """
+                    rules:
+                """ |> String.trim_trailing
+
+                [[_, first]|lines] = get_ruleset()
+                config = [config, " ", first|lines]
 
                 File.write!(destination, formatter.(config))
                 Mix.shell.info "Please import the #{Path.basename(destination)} config."
