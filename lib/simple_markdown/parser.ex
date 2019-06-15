@@ -7,8 +7,17 @@ defmodule SimpleMarkdown.Parser do
     """
 
     { :ok, rules } = Code.string_to_quoted(File.read!(Path.join(__DIR__, "rules.exs")))
+
+    @doc """
+      Get the default parsing rules.
+    """
+    @spec default_rules() :: [Parsey.rule]
     def default_rules, do: unquote(rules)
 
+    @doc """
+      Get the current parsing rules.
+    """
+    @spec rules() :: [Parsey.rule]
     def rules, do: Application.get_env(:simple_markdown, :rules, default_rules())
 
     @doc """
