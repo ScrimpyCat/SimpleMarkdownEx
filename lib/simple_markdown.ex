@@ -54,7 +54,7 @@ defmodule SimpleMarkdown do
     end
 
     @doc false
-    # deprecated 0.5.0
+    @deprecated "Use convert/2 instead"
     @spec to_html(String.t, [parser: [Parsey.rule], render: ([SimpleMarkdown.attribute | String.t] -> String.t)]) :: String.t
     def to_html(input, options \\ [render: &SimpleMarkdown.Renderer.HTML.render/1]), do: convert(input, options)
 
