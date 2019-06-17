@@ -64,7 +64,9 @@ defmodule SimpleMarkdown do
       to be applied to individual attributes.
     """
     @spec ast_to_structs([Parsey.ast]) :: [attribute | String.t]
-    def ast_to_structs(ast), do: Enum.map(ast, &node_to_struct(&1))
+    @spec ast_to_structs([Parsey.ast] | Stream.t) :: [attribute | String.t] | Stream.t
+    def ast_to_structs(ast) when is_list(ast), do: Enum.map(ast, &node_to_struct(&1))
+    def ast_to_structs(ast), do: Stream.map(ast, &node_to_struct(&1))
 
     @doc false
     @spec node_to_struct(Parsey.ast | String.t) :: attribute | String.t

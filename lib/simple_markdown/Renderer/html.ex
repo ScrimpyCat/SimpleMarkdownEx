@@ -21,11 +21,11 @@ defprotocol SimpleMarkdown.Renderer.HTML do
     @doc """
       Render the parsed markdown as HTML.
     """
-    @spec render([SimpleMarkdown.attribute | String.t] | SimpleMarkdown.attribute | String.t) :: String.t
+    @spec render(Stream.t | [SimpleMarkdown.attribute | String.t] | SimpleMarkdown.attribute | String.t) :: String.t
     def render(ast)
 end
 
-defimpl SimpleMarkdown.Renderer.HTML, for: List do
+defimpl SimpleMarkdown.Renderer.HTML, for: [List, Stream] do
     def render(ast) do
         Enum.reduce(ast, "", fn attribute, string ->
             string <> SimpleMarkdown.Renderer.HTML.render(attribute)

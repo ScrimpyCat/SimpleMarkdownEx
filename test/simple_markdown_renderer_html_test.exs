@@ -87,4 +87,8 @@ defmodule SimpleMarkdownRendererHTMLTest do
             { :paragraph, ["A ", { :link, ["link"], "http://example.com" }, "."] }
         ] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
     end
+
+    test "rendering stream examples" do
+        assert "<h1>foo</h1><h2>foo</h2><h3>foo</h3>" == Stream.iterate(1, &(&1 + 1)) |> Stream.map(&({ :header, ["foo"], &1 })) |> Stream.take(3) |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
+    end
 end
