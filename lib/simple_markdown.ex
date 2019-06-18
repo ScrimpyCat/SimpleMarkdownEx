@@ -48,7 +48,8 @@ defmodule SimpleMarkdown do
       used is the one provided in the rules config, and the default
       renderer is the HTML renderer.
     """
-    @spec convert(String.t, [parser: [Parsey.rule], render: ([SimpleMarkdown.attribute | String.t] -> String.t)]) :: String.t
+    @spec convert(String.t, [parser: [Parsey.rule], render: (Stream.t | [SimpleMarkdown.attribute | String.t] -> String.t)]) :: String.t
+    @spec convert(String.t, [parser: [Parsey.rule], render: (Stream.t | [SimpleMarkdown.attribute | String.t] -> Stream.t)]) :: Stream.t
     def convert(input, options \\ []) do
         options = Keyword.merge([parser: SimpleMarkdown.Parser.rules, render: &SimpleMarkdown.Renderer.HTML.render/1], options)
         SimpleMarkdown.Parser.parse(input, options[:parser]) |> ast_to_structs |> options[:render].()
@@ -64,7 +65,7 @@ defmodule SimpleMarkdown do
       to be applied to individual attributes.
     """
     @spec ast_to_structs([Parsey.ast]) :: [attribute | String.t]
-    @spec ast_to_structs([Parsey.ast] | Stream.t) :: [attribute | String.t] | Stream.t
+    @spec ast_to_structs(Stream.t) :: Stream.t
     def ast_to_structs(ast) when is_list(ast), do: Enum.map(ast, &node_to_struct(&1))
     def ast_to_structs(ast), do: Stream.map(ast, &node_to_struct(&1))
 
