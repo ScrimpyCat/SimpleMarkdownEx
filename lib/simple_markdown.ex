@@ -77,9 +77,7 @@ defmodule SimpleMarkdown do
 
     @doc false
     @spec atom_to_module(atom) :: atom
-    def atom_to_module(name) do
-        String.to_atom("Elixir.SimpleMarkdown.Attribute." <> format_as_module(to_string(name)))
-    end
+    def atom_to_module(name), do: Module.concat(SimpleMarkdown.Attribute, format_as_module(to_string(name)))
 
     @doc """
       Format a string to follow the module naming convention.
