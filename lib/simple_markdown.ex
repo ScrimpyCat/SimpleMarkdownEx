@@ -97,6 +97,6 @@ defmodule SimpleMarkdown do
     @doc """
       Create a child module relative to parent.
     """
-    @spec child_module(atom, atom) :: atom
-    def child_module(parent, child), do: String.to_atom(to_string(parent) <> "." <> format_as_module(to_string(child)))
+    @spec child_module!(String.t | atom, String.t | atom) :: atom
+    def child_module!(parent, child), do: Module.safe_concat(parent, format_as_module(to_string(child)))
 end

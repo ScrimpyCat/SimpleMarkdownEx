@@ -103,13 +103,14 @@ end
 
 defimpl SimpleMarkdown.Renderer.HTML, for: SimpleMarkdown.Attribute.PreformattedCode do
     def render(%{ input: input, option: syntax }) do
-        module = SimpleMarkdown.child_module(SimpleMarkdown.Attribute.PreformattedCode, syntax)
         try do
-            Protocol.assert_impl!(SimpleMarkdown.Renderer.HTML, module)
+            module = SimpleMarkdown.child_module!(SimpleMarkdown.Attribute.PreformattedCode, syntax)
+            :ok = Protocol.assert_impl!(SimpleMarkdown.Renderer.HTML, module)
+            module
         rescue
             ArgumentError -> SimpleMarkdown.Renderer.HTML.render(%{ __struct__: SimpleMarkdown.Attribute.PreformattedCode, input: input })
         else
-            :ok -> SimpleMarkdown.Renderer.HTML.render(%{ __struct__: module, input: input })
+            module -> SimpleMarkdown.Renderer.HTML.render(%{ __struct__: module, input: input })
         end
     end
 
