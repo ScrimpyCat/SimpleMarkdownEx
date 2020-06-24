@@ -4,12 +4,12 @@ defprotocol SimpleMarkdown.Renderer.HTML do
 
       Individual rule renderers can be overriden or new ones may be
       added. Rule types follow the format of structs defined under
-      `SimpleMarkdown.Attributes`. e.g. If there is a rule with the
+      `SimpleMarkdown.Attribute.*`. e.g. If there is a rule with the
       name `:header`, to provide a rendering implementation for that
       rule, you would specify `for: SimpleMarkdown.Attribute.Header`.
 
       Rules then consist of a Map with an `input` field, and an optional
-      `option` field. See <code class="inline"><a href="SimpleMarkdown.html#t:SimpleMarkdown.attribute/0"><span class="hljs-constant">SimpleMarkdown.</span>attribute</a></code>.
+      `option` field. See `t:SimpleMarkdown.attribute/0`.
 
       Example
       -------
