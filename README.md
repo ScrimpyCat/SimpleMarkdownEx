@@ -53,6 +53,6 @@ def applications do
 end
 
 def deps do
-    [{ :simple_markdown, "~> 0.6.0" }]
+    [{ :simple_markdown, "~> 0.7.0" }]
 end
 ```
