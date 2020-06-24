@@ -51,7 +51,11 @@
     preformatted_code: %{
         match: ~r/\A`{3}\h*?(\S+)\h*?\n(.*?)`{3}/s,
         option: fn input, [_, { syntax_index, syntax_length }|_] ->
-            binary_part(input, syntax_index, syntax_length) |> String.to_atom
+            binary_part(input, syntax_index, syntax_length) |> (&(try do
+                        String.to_existing_atom(&1)
+                    rescue
+                        ArgumentError -> &1
+                    end)).()
         end,
         format: &String.replace_suffix(&1, "\n", ""),
         rules: []
