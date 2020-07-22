@@ -29,6 +29,7 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
 
     @spaces [?\s, ?\t, ?\n, ?\f, ?\r]
     @quotes [?", ?']
+    @terminators [?>, ?/]
 
     defp to_ast_nodes(html, nodes \\ [], body \\ "")
     defp to_ast_nodes("",  nodes, body), do: { Enum.reverse([HtmlEntities.decode(body)|nodes]), "" }
@@ -42,27 +43,24 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
     defp till_closing_bracket(">" <> html), do: html
     defp till_closing_bracket(<<_ :: utf8, html :: binary>>), do: till_closing_bracket(html)
 
-    defp to_ast_element(html, tag \\ "")
-    defp to_ast_element(<<c :: utf8, html :: binary>>, "") when c in @spaces, do: to_ast_element(html, "")
-    defp to_ast_element(<<c :: utf8, html :: binary>>, tag) when c in @spaces do
+    defp to_ast_element(html, tag \\ "", attrs \\ [])
+    defp to_ast_element(<<c :: utf8, html :: binary>>, "", _) when c in @spaces, do: to_ast_element(html, "")
+    defp to_ast_element(<<c :: utf8, html :: binary>>, tag, _) when c in @spaces do
         { attrs, html } = to_ast_attributes(html)
-        { nodes, html } = to_ast_nodes(html)
-        { { tag, Enum.map(attrs, fn { k, v } -> { k, HtmlEntities.decode(v) } end), nodes }, html }
+        to_ast_element(html, tag, Enum.map(attrs, fn { k, v } -> { k, HtmlEntities.decode(v) } end))
     end
-    defp to_ast_element("/>" <> html, tag), do: { { tag, [], [] }, html }
-    defp to_ast_element(">" <> html, tag) do
+    defp to_ast_element("/>" <> html, tag, attrs), do: { { tag, attrs, [] }, html }
+    defp to_ast_element(">" <> html, tag, attrs) do
         { nodes, html } = to_ast_nodes(html)
-        { { tag, [], nodes }, html }
+        { { tag, attrs, nodes }, html }
     end
-    defp to_ast_element(<<c :: utf8, html :: binary>>, tag), do: to_ast_element(html, <<tag :: binary, c :: utf8>>)
-    defp to_ast_element(_, _), do: { [], "" }
+    defp to_ast_element(<<c :: utf8, html :: binary>>, tag, attrs), do: to_ast_element(html, <<tag :: binary, c :: utf8>>, attrs)
+    defp to_ast_element(_, _, _), do: { [], "" }
 
     defp to_ast_attributes(html, type \\ :key, quoted \\ nil, attrs \\ [{ "", "" }])
     defp to_ast_attributes("=" <> html, :key, nil, attrs), do: to_ast_attributes(html, :value, nil, attrs)
-    defp to_ast_attributes("/>" <> html, _, nil, [{ "", "" }|attrs]), do: { Enum.reverse(attrs), html }
-    defp to_ast_attributes("/>" <> html, _, nil, attrs), do: { Enum.reverse(attrs), html }
-    defp to_ast_attributes(">" <> html, _, nil, [{ "", "" }|attrs]), do: { Enum.reverse(attrs), html }
-    defp to_ast_attributes(">" <> html, _, nil, attrs), do: { Enum.reverse(attrs), html }
+    defp to_ast_attributes(html = <<c :: utf8, _ :: binary>>, _, nil, [{ "", "" }|attrs]) when c in @terminators, do: { Enum.reverse(attrs), html }
+    defp to_ast_attributes(html = <<c :: utf8, _ :: binary>>, _, nil, attrs) when c in @terminators, do: { Enum.reverse(attrs), html }
     defp to_ast_attributes(<<c :: utf8, html :: binary>>, :key, nil, attrs = [{ "", "" }|_]) when c in @spaces, do: to_ast_attributes(html, :key, nil, attrs)
     defp to_ast_attributes(<<c :: utf8, html :: binary>>, :key, nil, attrs) when c in @spaces, do: to_ast_attributes(html, :key, nil, [{ "", "" }|attrs])
     defp to_ast_attributes(<<c :: utf8, html :: binary>>, :value, nil, attrs) when c in @spaces, do: to_ast_attributes(html, :key, nil, [{ "", "" }|attrs])
@@ -70,4 +68,5 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
     defp to_ast_attributes(<<c :: utf8, html :: binary>>, type, c, attrs), do: to_ast_attributes(html, type, nil, attrs)
     defp to_ast_attributes(<<c :: utf8, html :: binary>>, :key, quoted, [{ key, value }|attrs]), do: to_ast_attributes(html, :key, quoted, [{ <<key :: binary, c :: utf8>>, value }|attrs])
     defp to_ast_attributes(<<c :: utf8, html :: binary>>, :value, quoted, [{ key, value }|attrs]), do: to_ast_attributes(html, :value, quoted, [{ key, <<value :: binary, c :: utf8>> }|attrs])
+    defp to_ast_attributes(_, _, _, _), do: { [], "" }
 end
