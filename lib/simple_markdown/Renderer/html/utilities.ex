@@ -1,5 +1,5 @@
 defmodule SimpleMarkdown.Renderer.HTML.Utilities do
-    @type ast :: { tag :: String.Chars.t, attr :: [{ String.Chars.t, String.Chars.t }], ast } | list | binary
+    @type ast :: { tag :: String.Chars.t, attrs :: [{ String.Chars.t, String.Chars.t }], ast } | list | binary
 
     @spec ast_to_html(ast) :: IO.chardata
     def ast_to_html({ tag, attrs, nodes }) do
@@ -32,13 +32,24 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
     @terminators [?>, ?/]
 
     defp to_ast_nodes(html, nodes \\ [], body \\ "")
-    defp to_ast_nodes("",  nodes, body), do: { Enum.reverse([HtmlEntities.decode(body)|nodes]), "" }
-    defp to_ast_nodes("</" <> html,  nodes, body), do: { Enum.reverse([HtmlEntities.decode(body)|nodes]), till_closing_bracket(html) }
+    defp to_ast_nodes("",  nodes, body), do: { merge_nodes(HtmlEntities.decode(body), nodes) |> compact_nodes, "" }
+    defp to_ast_nodes("</" <> html,  nodes, body), do: { merge_nodes(HtmlEntities.decode(body), nodes) |> compact_nodes, till_closing_bracket(html) }
     defp to_ast_nodes("<" <> html, nodes, body) do
         { element, html } = to_ast_element(html)
-        to_ast_nodes(html, [element, HtmlEntities.decode(body)|nodes])
+        to_ast_nodes(html, merge_nodes(element, HtmlEntities.decode(body), nodes))
     end
     defp to_ast_nodes(<<c :: utf8, html :: binary>>, nodes, body), do: to_ast_nodes(html, nodes, <<body :: binary, c :: utf8>>)
+
+    defp compact_nodes([node]), do: node
+    defp compact_nodes(nodes), do: nodes |> Enum.reverse
+
+    defp merge_nodes("", list), do: list
+    defp merge_nodes(a, list), do: [a|list]
+
+    defp merge_nodes("", "", list), do: list
+    defp merge_nodes(a, "", list), do: [a|list]
+    defp merge_nodes("", b, list), do: [b|list]
+    defp merge_nodes(a, b, list), do: [a, b|list]
 
     defp till_closing_bracket(">" <> html), do: html
     defp till_closing_bracket(<<_ :: utf8, html :: binary>>), do: till_closing_bracket(html)
