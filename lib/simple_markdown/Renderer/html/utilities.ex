@@ -1,5 +1,5 @@
 defmodule SimpleMarkdown.Renderer.HTML.Utilities do
-    @type ast :: { tag :: String.Chars.t, attrs :: [{ String.Chars.t, String.Chars.t }], ast } | list | binary
+    @type ast :: { tag :: String.Chars.t, attrs :: [{ String.Chars.t, String.Chars.t }], ast } | [ast] | String.t
 
     @spec ast_to_html(ast) :: IO.chardata
     def ast_to_html({ tag, attrs, nodes }) do
