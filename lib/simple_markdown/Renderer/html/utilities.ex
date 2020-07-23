@@ -1,6 +1,12 @@
 defmodule SimpleMarkdown.Renderer.HTML.Utilities do
     @type ast :: { tag :: String.Chars.t, attrs :: [{ String.Chars.t, String.Chars.t }], ast } | [ast] | String.t
 
+    @doc """
+      Convert the HTML AST to HTML.
+
+        iex> SimpleMarkdown.Renderer.HTML.Utilities.ast_to_html({ :p, [], "hello" }) |> IO.chardata_to_string
+        "<p>hello</p>"
+    """
     @spec ast_to_html(ast) :: IO.chardata
     def ast_to_html({ tag, attrs, nodes }) do
         tag = to_string(tag)
@@ -21,6 +27,12 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
     def ast_to_html(list) when is_list(list), do: Enum.map(list, &ast_to_html/1)
     def ast_to_html(string), do: HtmlEntities.encode(string)
 
+    @doc """
+      Convert the HTML to HTML AST.
+
+        iex> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast("<p>hello</p>")
+        { "p", [], "hello" }
+    """
     @spec html_to_ast(IO.chardata) :: ast
     def html_to_ast(html)  do
         { nodes, _ } = to_ast_nodes(IO.chardata_to_string(html))
