@@ -1,15 +1,59 @@
 defmodule SimpleMarkdown.Renderer.HTML.Utilities do
     @type ast :: { tag :: String.Chars.t, attrs :: [{ String.Chars.t, String.Chars.t }], ast } | [ast] | String.t
 
+    @type version :: { major :: non_neg_integer, minor :: non_neg_integer }
+    @type format(type) :: { type, version }
+
     @doc """
       Convert the HTML AST to HTML.
 
         iex> SimpleMarkdown.Renderer.HTML.Utilities.ast_to_html({ :p, [], "hello" }) |> IO.chardata_to_string
         "<p>hello</p>"
     """
-    @spec ast_to_html(ast) :: IO.chardata
-    def ast_to_html({ tag, attrs, nodes }) do
-        tag = to_string(tag)
+    @spec ast_to_html(ast, keyword) :: IO.chardata
+    def ast_to_html(ast, opts \\ []) do
+        void_elements = Enum.reduce(opts[:void_elements] || void_elements(), MapSet.new(), fn
+            e, acc when is_binary(e) -> MapSet.put(acc, e)
+            e, acc -> MapSet.put(acc, e) |> MapSet.put(to_string(e))
+        end)
+        ast_to_html(ast, opts[:format] || { :html, { 5, 0 } }, void_elements)
+    end
+
+    @spec ast_to_html(ast, format(:html) | format(:xhtml), MapSet.t) :: IO.chardata
+    defp ast_to_html({ tag, attrs, nodes }, format, void_elements) do
+        tag_s = to_string(tag)
+        { is_void, tag } = case MapSet.member?(void_elements, tag) do
+            true -> { true, tag_s }
+            false -> { if(is_binary(tag), do: false, else: MapSet.member?(void_elements, tag_s)), tag_s }
+        end
+        html_element(tag, attrs, nodes, format, is_void, void_elements)
+    end
+    defp ast_to_html(list, format, void_elements) when is_list(list), do: Enum.map(list, &ast_to_html(&1, format, void_elements))
+    defp ast_to_html(string, _, _), do: HtmlEntities.encode(string)
+
+    defp html_element(tag, attrs, [], { :html, { vsn, _ } }, true, _) when vsn >= 5 do
+        [
+            "<",
+            tag,
+            Enum.map(attrs, fn
+                { key, "" } -> [" ", to_string(key)]
+                { key, value } -> [" ", to_string(key), "=\"", to_string(value) |> HtmlEntities.encode, "\""]
+            end),
+            ">"
+        ]
+    end
+    defp html_element(tag, attrs, [], { :xhtml, _ }, true, _) do
+        [
+            "<",
+            tag,
+            Enum.map(attrs, fn
+                { key, "" } -> [" ", to_string(key)]
+                { key, value } -> [" ", to_string(key), "=\"", to_string(value) |> HtmlEntities.encode, "\""]
+            end),
+            " />"
+        ]
+    end
+    defp html_element(tag, attrs, nodes, format, _, void_elements) do
         [
             "<",
             tag,
@@ -18,14 +62,33 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
                 { key, value } -> [" ", to_string(key), "=\"", to_string(value) |> HtmlEntities.encode, "\""]
             end),
             ">",
-            ast_to_html(nodes),
+            ast_to_html(nodes, format, void_elements),
             "</",
             tag,
             ">"
         ]
     end
-    def ast_to_html(list) when is_list(list), do: Enum.map(list, &ast_to_html/1)
-    def ast_to_html(string), do: HtmlEntities.encode(string)
+
+    # https://html.spec.whatwg.org/multipage/syntax.html#void-elements
+    defp void_elements() do
+        [
+            :area,
+            :base,
+            :br,
+            :col,
+            :embed,
+            :hr,
+            :img,
+            :input,
+            :keygen, # obsolete
+            :link,
+            :meta,
+            :param,
+            :source,
+            :track,
+            :wbr
+        ]
+    end
 
     @doc """
       Convert the HTML to HTML AST.
