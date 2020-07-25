@@ -3,6 +3,7 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
 
     @type version :: { major :: non_neg_integer, minor :: non_neg_integer }
     @type format(type) :: { type, version }
+    @type formats :: format(:html) | format(:xhtml)
 
     @doc """
       Convert the HTML AST to HTML.
@@ -19,7 +20,7 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
         ast_to_html(ast, opts[:format] || { :html, { 5, 0 } }, void_elements)
     end
 
-    @spec ast_to_html(ast, format(:html) | format(:xhtml), MapSet.t) :: IO.chardata
+    @spec ast_to_html(ast, formats, MapSet.t) :: IO.chardata
     defp ast_to_html({ tag, attrs, nodes }, format, void_elements) do
         tag_s = to_string(tag)
         { is_void, tag } = case MapSet.member?(void_elements, tag) do
