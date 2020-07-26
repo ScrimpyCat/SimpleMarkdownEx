@@ -13,26 +13,30 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
     """
     @spec ast_to_html(ast, keyword) :: IO.chardata
     def ast_to_html(ast, opts \\ []) do
-        void_elements = Enum.reduce(opts[:void_elements] || void_elements(), MapSet.new(), fn
-            e, acc when is_binary(e) -> MapSet.put(acc, e)
-            e, acc -> MapSet.put(acc, e) |> MapSet.put(to_string(e))
-        end)
-        ast_to_html(ast, opts[:format] || { :html, { 5, 0 } }, void_elements)
+        ast_to_html(ast, opts[:format] || { :html, { 5, 0 } }, make_set(opts[:void_elements] || void_elements()), make_set(opts[:raw_text_elements] || raw_text_elements()), false)
     end
 
-    @spec ast_to_html(ast, formats, MapSet.t) :: IO.chardata
-    defp ast_to_html({ tag, attrs, nodes }, format, void_elements) do
+    @spec ast_to_html(ast, formats, MapSet.t, MapSet.t, boolean) :: IO.chardata
+    defp ast_to_html({ tag, attrs, nodes }, format, void_elements, raw_text_elements, is_raw_text) do
         tag_s = to_string(tag)
-        { is_void, tag } = case MapSet.member?(void_elements, tag) do
-            true -> { true, tag_s }
-            false -> { if(is_binary(tag), do: false, else: MapSet.member?(void_elements, tag_s)), tag_s }
+        { { is_void, is_raw_text }, tag } = if is_raw_text do
+            case MapSet.member?(void_elements, tag) do
+                true -> { { true, true }, tag_s }
+                result -> { if(is_binary(tag), do: { result, true }, else: { MapSet.member?(void_elements, tag_s), true }), tag_s }
+            end
+        else
+            case { MapSet.member?(void_elements, tag), MapSet.member?(raw_text_elements, tag) } do
+                { true, true } -> { { true, true }, tag_s }
+                result -> { if(is_binary(tag), do: result, else: { MapSet.member?(void_elements, tag_s), MapSet.member?(raw_text_elements, tag_s) }), tag_s }
+            end
         end
-        html_element(tag, attrs, nodes, format, is_void, void_elements)
+        html_element(tag, attrs, nodes, format, is_void, void_elements, raw_text_elements, is_raw_text)
     end
-    defp ast_to_html(list, format, void_elements) when is_list(list), do: Enum.map(list, &ast_to_html(&1, format, void_elements))
-    defp ast_to_html(string, _, _), do: HtmlEntities.encode(string)
+    defp ast_to_html(list, format, void_elements, raw_text_elements, is_raw_text) when is_list(list), do: Enum.map(list, &ast_to_html(&1, format, void_elements, raw_text_elements, is_raw_text))
+    defp ast_to_html(string, _, _, _, false), do: HtmlEntities.encode(string)
+    defp ast_to_html(string, _, _, _, true), do: string
 
-    defp html_element(tag, attrs, [], { :html, { vsn, _ } }, true, _) when vsn >= 5 do
+    defp html_element(tag, attrs, [], { :html, { vsn, _ } }, true, _, _, _) when vsn >= 5 do
         [
             "<",
             tag,
@@ -43,7 +47,7 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
             ">"
         ]
     end
-    defp html_element(tag, attrs, [], { :xhtml, _ }, true, _) do
+    defp html_element(tag, attrs, [], { :xhtml, _ }, true, _, _, _) do
         [
             "<",
             tag,
@@ -54,7 +58,7 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
             " />"
         ]
     end
-    defp html_element(tag, attrs, nodes, format, _, void_elements) do
+    defp html_element(tag, attrs, nodes, format, _, void_elements, raw_text_elements, is_raw_text) do
         [
             "<",
             tag,
@@ -63,11 +67,18 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
                 { key, value } -> [" ", to_string(key), "=\"", to_string(value) |> HtmlEntities.encode, "\""]
             end),
             ">",
-            ast_to_html(nodes, format, void_elements),
+            ast_to_html(nodes, format, void_elements, raw_text_elements, is_raw_text),
             "</",
             tag,
             ">"
         ]
+    end
+
+    defp make_set(tags) do
+        Enum.reduce(tags, MapSet.new(), fn
+            e, acc when is_binary(e) -> MapSet.put(acc, e)
+            e, acc -> MapSet.put(acc, e) |> MapSet.put(to_string(e))
+        end)
     end
 
     # https://html.spec.whatwg.org/multipage/syntax.html#void-elements
@@ -88,6 +99,14 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
             :source,
             :track,
             :wbr
+        ]
+    end
+
+    # https://html.spec.whatwg.org/multipage/syntax.html#raw-text-elements
+    defp raw_text_elements() do
+        [
+            :script,
+            :style
         ]
     end
 
