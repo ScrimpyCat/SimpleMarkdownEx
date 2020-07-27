@@ -17,12 +17,22 @@ defprotocol SimpleMarkdown.Renderer.HTML.AST do
             def render(%{ input: input, option: size }), do: { "h\#{size}", [], SimpleMarkdown.Renderer.HTML.AST.render(input) }
         end
     """
+    @fallback_to_any true
 
     @doc """
       Render the parsed markdown as HTML.
     """
     @spec render(Stream.t | [SimpleMarkdown.attribute | String.t] | SimpleMarkdown.attribute | String.t) :: SimpleMarkdown.Renderer.HTML.Utilities.ast
     def render(ast)
+end
+
+defimpl SimpleMarkdown.Renderer.HTML.AST, for: Any do
+    def render(ast) do
+        case SimpleMarkdown.Renderer.HTML.impl_for(ast) do
+            SimpleMarkdown.Renderer.HTML.Any -> raise Protocol.UndefinedError, protocol: SimpleMarkdown.Renderer.HTML.AST, value: ast
+            _ -> SimpleMarkdown.Renderer.HTML.render(ast) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast
+        end
+    end
 end
 
 defimpl SimpleMarkdown.Renderer.HTML.AST, for: [List, Stream] do
