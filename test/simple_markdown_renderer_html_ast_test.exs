@@ -196,4 +196,21 @@ defmodule SimpleMarkdownRendererHTMLASTTest do
     test "rendering stream examples" do
         assert [{ :h1, [], ["foo"] }, { :h2, [], ["foo"] }, { :h3, [], ["foo"] }] == Stream.iterate(1, &(&1 + 1)) |> Stream.map(&({ :header, ["foo"], &1 })) |> Stream.take(3) |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.AST.render
     end
+
+    defimpl SimpleMarkdown.Renderer.HTML, for: SimpleMarkdown.Attribute.Foo do
+        def render(%{ input: input }), do: "<foo>#{SimpleMarkdown.Renderer.HTML.AST.render(input)}</foo>"
+    end
+
+    defimpl SimpleMarkdown.Renderer.HTML.AST, for: SimpleMarkdown.Attribute.FooAst do
+        def render(%{ input: input }), do: { :foo_ast, [], SimpleMarkdown.Renderer.HTML.AST.render(input) }
+    end
+
+    test "rendering custom ast attribute" do
+        assert [{ :foo_ast, [], ["test"] }] == [{ :foo_ast, ["test"] }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.AST.render
+    end
+
+    test "rendering fallback custom html attribute" do
+        assert [{ "foo", [], "test" }] == [{ :foo, ["test"] }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.AST.render
+        assert %Protocol.UndefinedError{ protocol: SimpleMarkdown.Renderer.HTML.AST } = catch_error([{ :foo_unimplemented, ["test"] }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.AST.render)
+    end
 end
