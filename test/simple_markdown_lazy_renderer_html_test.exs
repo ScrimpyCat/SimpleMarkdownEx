@@ -12,8 +12,6 @@ defmodule SimpleMarkdownLazyRendererHTMLTest do
         assert "<h4>test</h4>" == [{ :header, ["test"], 4 }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.LazyRenderer.HTML.render |> Enum.join
         assert "<h5>test</h5>" == [{ :header, ["test"], 5 }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.LazyRenderer.HTML.render |> Enum.join
         assert "<h6>test</h6>" == [{ :header, ["test"], 6 }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.LazyRenderer.HTML.render |> Enum.join
-        assert "<h1>test</h1>" == [{ :header, ["test"], 1 }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.LazyRenderer.HTML.render |> Enum.join
-        assert "<h2>test</h2>" == [{ :header, ["test"], 2 }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.LazyRenderer.HTML.render |> Enum.join
     end
 
     test "rendering emphasis" do

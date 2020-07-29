@@ -12,8 +12,6 @@ defmodule SimpleMarkdownRendererHTMLTest do
         assert "<h4>test</h4>" == [{ :header, ["test"], 4 }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
         assert "<h5>test</h5>" == [{ :header, ["test"], 5 }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
         assert "<h6>test</h6>" == [{ :header, ["test"], 6 }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
-        assert "<h1>test</h1>" == [{ :header, ["test"], 1 }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
-        assert "<h2>test</h2>" == [{ :header, ["test"], 2 }] |> SimpleMarkdown.ast_to_structs |> SimpleMarkdown.Renderer.HTML.render
     end
 
     test "rendering emphasis" do
