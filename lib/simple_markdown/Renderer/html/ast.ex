@@ -11,6 +11,17 @@ defprotocol SimpleMarkdown.Renderer.HTML.AST do
       Rules then consist of a Map with an `input` field, and an optional
       `option` field. See `t:SimpleMarkdown.attribute/0`.
 
+      HTML vs AST
+      -----------
+      The AST format (`t:SimpleMarkdown.Renderer.HTML.Utilities.ast/0`) provides a
+      more flexible general purpose way of structuring HTML. While HTML provides a
+      more cumbersome by explicit way of structuring the rendered HTML.
+
+      When there is no implementation for a certain rule it will fallback to the
+      `SimpleMarkdown.Renderer.HTML` renderer (if one exists) and will convert that
+      HTML to AST using `SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast/2`. So
+      you only need to maintain one set of implementations to cover all HTML renderers.
+
       Example
       -------
         defimpl SimpleMarkdown.Renderer.HTML.AST, for: SimpleMarkdown.Attribute.Header do
@@ -20,7 +31,7 @@ defprotocol SimpleMarkdown.Renderer.HTML.AST do
     @fallback_to_any true
 
     @doc """
-      Render the parsed markdown as HTML.
+      Render the parsed markdown as HTML AST.
     """
     @spec render(Stream.t | [SimpleMarkdown.attribute | String.t] | SimpleMarkdown.attribute | String.t) :: SimpleMarkdown.Renderer.HTML.Utilities.ast
     def render(ast)

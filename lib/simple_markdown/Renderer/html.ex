@@ -11,6 +11,17 @@ defprotocol SimpleMarkdown.Renderer.HTML do
       Rules then consist of a Map with an `input` field, and an optional
       `option` field. See `t:SimpleMarkdown.attribute/0`.
 
+      HTML vs AST
+      -----------
+      The AST format (`t:SimpleMarkdown.Renderer.HTML.Utilities.ast/0`) provides a
+      more flexible general purpose way of structuring HTML. While HTML provides a
+      more cumbersome by explicit way of structuring the rendered HTML.
+
+      When there is no implementation for a certain rule it will fallback to the
+      `SimpleMarkdown.Renderer.HTML.AST` renderer (if one exists) and will convert that
+      AST to HTML using `SimpleMarkdown.Renderer.HTML.Utilities.ast_to_html/2`. So
+      you only need to maintain one set of implementations to cover all HTML renderers.
+
       Example
       -------
         defimpl SimpleMarkdown.Renderer.HTML, for: SimpleMarkdown.Attribute.Header do
