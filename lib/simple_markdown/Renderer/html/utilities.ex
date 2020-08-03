@@ -1,13 +1,31 @@
 defmodule SimpleMarkdown.Renderer.HTML.Utilities do
+    @moduledoc """
+      Convenient functions for working with HTML.
+    """
     @type ast :: { tag :: String.Chars.t, attrs :: [{ String.Chars.t, String.Chars.t }], ast } | [ast] | String.t
 
     @type version :: { major :: non_neg_integer, minor :: non_neg_integer }
     @type format(type) :: { type, version }
     @type formats :: format(:html) | format(:xhtml)
+    @type tag_list :: [atom | String.t]
 
     @doc """
       Convert the HTML AST to HTML.
 
+      The conversion behaviour can be modified by setting the `opts` parameter with
+      any of the following:
+
+      * `:format` - To control the HTML format. This takes one of the valid `t:formats/0`.
+      By default this is set to generate HTML5 code (`{ :html, { 5, 0 } }`).
+      * `:void_elements` - To customise which elements are void elements (do not
+      contain content). This takes a `t:tag_list/0`. By default this is set to the list
+      of tags returned by `void_elements/0`.
+      * `:raw_text_elements` - To customise which elements are raw text elements (do not
+      encode their content nor contain nested nodes). This takes a `t:tag_list/0`. By default
+      this is set to the list of tags returned by `raw_text_elements/0`.
+
+      Example
+      -------
         iex> SimpleMarkdown.Renderer.HTML.Utilities.ast_to_html({ :p, [], "hello" }) |> IO.chardata_to_string
         "<p>hello</p>"
     """
@@ -81,8 +99,11 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
         end)
     end
 
-    # https://html.spec.whatwg.org/multipage/syntax.html#void-elements
-    defp void_elements() do
+    @doc """
+      A list of [void elements](https://html.spec.whatwg.org/multipage/syntax.html#void-elements).
+    """
+    @spec void_elements() :: tag_list
+    def void_elements() do
         [
             :area,
             :base,
@@ -102,8 +123,11 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
         ]
     end
 
-    # https://html.spec.whatwg.org/multipage/syntax.html#raw-text-elements
-    defp raw_text_elements() do
+    @doc """
+      A list of [raw text elements](https://html.spec.whatwg.org/multipage/syntax.html#raw-text-elements).
+    """
+    @spec raw_text_elements() :: tag_list
+    def raw_text_elements() do
         [
             :script,
             :style
@@ -113,6 +137,18 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
     @doc """
       Convert the HTML to HTML AST.
 
+      The parsing behaviour can be modified by setting the `opts` parameter with
+      any of the following:
+
+      * `:void_elements` - To customise which elements are void elements (do not
+      contain content). This takes a `t:tag_list/0`. By default this is set to the list
+      of tags returned by `void_elements/0`.
+      * `:raw_text_elements` - To customise which elements are raw text elements (do not
+      encode their content nor contain nested nodes). This takes a `t:tag_list/0`. By default
+      this is set to the list of tags returned by `raw_text_elements/0`.
+
+      Example
+      -------
         iex> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast("<p>hello</p>")
         { "p", [], "hello" }
     """
