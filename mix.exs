@@ -5,7 +5,7 @@ defmodule SimpleMarkdown.Mixfile do
         [
             app: :simple_markdown,
             description: "A simple and extendable Markdown converter",
-            version: "0.7.0",
+            version: "0.8.0",
             elixir: "~> 1.3",
             build_embedded: Mix.env == :prod,
             start_permanent: Mix.env == :prod,
