@@ -10,6 +10,24 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
     @type tag_list :: [atom | String.t]
     @type chardata_list :: [{ String.t, String.t }]
 
+    @spaces [?\s, ?\t, ?\n, ?\f, ?\r]
+    @quotes [?", ?']
+    @terminators [?>, ?/]
+
+    defmodule UnencodableAttributeError do
+        defexception [:value]
+
+        @impl Exception
+        def exception(value) do
+            %__MODULE__{
+                value: value
+            }
+        end
+
+        @impl Exception
+        def message(%{ value: value }), do: "Attribute value must either be encoded or have a format compatible with unquoted, single-quoted, or double-quoted attribute-value syntax: #{inspect value}"
+    end
+
     @doc """
       Convert the HTML AST to HTML.
 
@@ -30,6 +48,8 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
       cases that do not encode their content nor contain nested nodes). This takes a
       `t:chardata_list/0`. By default this is set to the list of opening/closing tags returned
       by `chardata/0`.
+      * `:encode_attributes` - To control whether attribute values are encoded, expects a
+      `boolean` value. By default this is set to `false`.
 
       Example
       -------
@@ -41,11 +61,11 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
     """
     @spec ast_to_html(ast, keyword) :: IO.chardata
     def ast_to_html(ast, opts \\ []) do
-        ast_to_html(ast, opts[:format] || { :html, { 5, 0 } }, make_set(opts[:void_elements] || void_elements()), make_set(opts[:raw_text_elements] || raw_text_elements()), false, Map.new(opts[:chardata] || chardata()), opts[:include_chardata] || false)
+        ast_to_html(ast, opts[:format] || { :html, { 5, 0 } }, make_set(opts[:void_elements] || void_elements()), make_set(opts[:raw_text_elements] || raw_text_elements()), false, Map.new(opts[:chardata] || chardata()), opts[:include_chardata] || false, opts[:encode_attributes] || false)
     end
 
-    @spec ast_to_html(ast, formats, MapSet.t, MapSet.t, boolean, %{ optional(String.t) => String.t }, boolean) :: IO.chardata
-    defp ast_to_html({ tag, attrs, nodes }, format, void_elements, raw_text_elements, is_raw_text, chardata, include_chardata) do
+    @spec ast_to_html(ast, formats, MapSet.t, MapSet.t, boolean, %{ optional(String.t) => String.t }, boolean, boolean) :: IO.chardata
+    defp ast_to_html({ tag, attrs, nodes }, format, void_elements, raw_text_elements, is_raw_text, chardata, include_chardata, encode_attrs) do
         tag_s = to_string(tag)
 
         case chardata[tag_s] do
@@ -62,55 +82,62 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
                     end
                 end
 
-                html_element(tag, attrs, nodes, format, is_void, void_elements, raw_text_elements, is_raw_text, chardata, include_chardata)
+                html_element(tag, attrs, nodes, format, is_void, void_elements, raw_text_elements, is_raw_text, chardata, include_chardata, encode_attrs)
             suffix ->
                 if include_chardata do
-                    ["<", tag_s, ast_to_html(nodes, format, void_elements, raw_text_elements, true, chardata, include_chardata), suffix, ">"]
+                    ["<", tag_s, ast_to_html(nodes, format, void_elements, raw_text_elements, true, chardata, include_chardata, encode_attrs), suffix, ">"]
                 else
                     ""
                 end
         end
     end
-    defp ast_to_html(list, format, void_elements, raw_text_elements, is_raw_text, chardata, include_chardata) when is_list(list), do: Enum.map(list, &ast_to_html(&1, format, void_elements, raw_text_elements, is_raw_text, chardata, include_chardata))
-    defp ast_to_html(string, _, _, _, false, _, _), do: HtmlEntities.encode(string)
-    defp ast_to_html(string, _, _, _, true, _, _), do: string
+    defp ast_to_html(list, format, void_elements, raw_text_elements, is_raw_text, chardata, include_chardata, encode_attrs) when is_list(list), do: Enum.map(list, &ast_to_html(&1, format, void_elements, raw_text_elements, is_raw_text, chardata, include_chardata, encode_attrs))
+    defp ast_to_html(string, _, _, _, false, _, _, _), do: HtmlEntities.encode(string)
+    defp ast_to_html(string, _, _, _, true, _, _, _), do: string
 
-    defp html_element(tag, attrs, [], { :html, { vsn, _ } }, true, _, _, _, _, _) when vsn >= 5 do
+    defp html_element(tag, attrs, [], { :html, { vsn, _ } }, true, _, _, _, _, _, encode_attrs) when vsn >= 5 do
         [
             "<",
             tag,
-            Enum.map(attrs, fn
-                { key, "" } -> [" ", to_string(key)]
-                { key, value } -> [" ", to_string(key), "=\"", to_string(value) |> HtmlEntities.encode, "\""]
-            end),
+            html_attribute(attrs, encode_attrs),
             ">"
         ]
     end
-    defp html_element(tag, attrs, [], { :xhtml, _ }, true, _, _, _, _, _) do
+    defp html_element(tag, attrs, [], { :xhtml, _ }, true, _, _, _, _, _, encode_attrs) do
         [
             "<",
             tag,
-            Enum.map(attrs, fn
-                { key, "" } -> [" ", to_string(key)]
-                { key, value } -> [" ", to_string(key), "=\"", to_string(value) |> HtmlEntities.encode, "\""]
-            end),
+            html_attribute(attrs, encode_attrs),
             " />"
         ]
     end
-    defp html_element(tag, attrs, nodes, format, _, void_elements, raw_text_elements, is_raw_text, chardata, include_chardata) do
+    defp html_element(tag, attrs, nodes, format, _, void_elements, raw_text_elements, is_raw_text, chardata, include_chardata, encode_attrs) do
         [
             "<",
             tag,
-            Enum.map(attrs, fn
-                { key, "" } -> [" ", to_string(key)]
-                { key, value } -> [" ", to_string(key), "=\"", to_string(value) |> HtmlEntities.encode, "\""]
-            end),
+            html_attribute(attrs, encode_attrs),
             ">",
-            ast_to_html(nodes, format, void_elements, raw_text_elements, is_raw_text, chardata, include_chardata),
+            ast_to_html(nodes, format, void_elements, raw_text_elements, is_raw_text, chardata, include_chardata, encode_attrs),
             "</",
             tag,
             ">"
         ]
+    end
+
+    defp html_attribute(attrs, encode_attrs) do
+        Enum.map(attrs, fn
+            { key, "" } -> [" ", to_string(key)]
+            { key, value } -> [" ", to_string(key), "=", to_string(value) |> encode_attr_value(encode_attrs)]
+        end)
+    end
+
+    defp encode_attr_value(value, true), do: ["\"", HtmlEntities.encode(value), "\""]
+    defp encode_attr_value(value, false) do
+        cond do
+            not String.contains?(value, "\"") -> ["\"", value, "\""]
+            not String.contains?(value, "'") -> ["'", value, "'"]
+            true -> raise UnencodableAttributeError, value
+        end
     end
 
     defp make_set(tags) do
@@ -191,11 +218,13 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
       encode their content nor contain nested nodes). This takes a `t:tag_list/0`. By default
       this is set to the list of tags returned by `raw_text_elements/0`.
       * `:include_chardata` - To control whether nodes that match `:chardata` should be
-      included in the AST or not. By default this is set to false.
+      included in the AST or not, expects a `boolean` value. By default this is set to `false`.
       * `:chardata` - To customise which elements are considered to be character data (special
       cases that do not encode their content nor contain nested nodes). This takes a
       `t:chardata_list/0`. By default this is set to the list of opening/closing tags returned
       by `chardata/0`.
+      * `:decode_attributes` - To control whether attribute values are decoded, expects a
+      `boolean` value. By default this is set to `false`.
 
 
       Example
@@ -208,44 +237,40 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
     """
     @spec html_to_ast(IO.chardata, keyword) :: ast
     def html_to_ast(html, opts \\ [])  do
-        { nodes, _ } = to_ast_nodes(IO.chardata_to_string(html), make_set(opts[:void_elements] || void_elements()), make_set(opts[:raw_text_elements] || raw_text_elements()), { opts[:chardata] || chardata(), opts[:include_chardata] || false })
+        { nodes, _ } = to_ast_nodes(IO.chardata_to_string(html), make_set(opts[:void_elements] || void_elements()), make_set(opts[:raw_text_elements] || raw_text_elements()), { opts[:chardata] || chardata(), opts[:include_chardata] || false }, opts[:decode_attributes] || false)
         nodes
     end
 
-    @spaces [?\s, ?\t, ?\n, ?\f, ?\r]
-    @quotes [?", ?']
-    @terminators [?>, ?/]
-
-    defp to_ast_nodes(html, void_elements, raw_text_elements, chardata, raw_text_tag \\ nil, nodes \\ [], body \\ "")
-    defp to_ast_nodes("",  _, _, _, nil, nodes, body), do: { merge_nodes(HtmlEntities.decode(body), nodes) |> compact_nodes, "" }
-    defp to_ast_nodes("",  _, _, _, _, nodes, body), do: { merge_nodes(body, nodes) |> compact_nodes, "" }
-    defp to_ast_nodes("</" <> html, _, _, _, nil, nodes, body), do: { merge_nodes(HtmlEntities.decode(body), nodes) |> compact_nodes, till_closing_bracket(html) }
-    defp to_ast_nodes("</" <> html, void_elements, raw_text_elements, chardata, raw_text_tag, nodes, body) do
+    defp to_ast_nodes(html, void_elements, raw_text_elements, chardata, decode_attrs, raw_text_tag \\ nil, nodes \\ [], body \\ "")
+    defp to_ast_nodes("",  _, _, _, _, nil, nodes, body), do: { merge_nodes(HtmlEntities.decode(body), nodes) |> compact_nodes, "" }
+    defp to_ast_nodes("",  _, _, _, _, _, nodes, body), do: { merge_nodes(body, nodes) |> compact_nodes, "" }
+    defp to_ast_nodes("</" <> html, _, _, _, _, nil, nodes, body), do: { merge_nodes(HtmlEntities.decode(body), nodes) |> compact_nodes, till_closing_bracket(html) }
+    defp to_ast_nodes("</" <> html, void_elements, raw_text_elements, chardata, decode_attrs, raw_text_tag, nodes, body) do
         if Regex.match?(~r/^#{raw_text_tag}\W*>/, html) do
             { merge_nodes(body, nodes) |> compact_nodes, till_closing_bracket(html) }
         else
-            to_ast_nodes(html, void_elements, raw_text_elements, chardata, raw_text_tag, nodes, body <> "</")
+            to_ast_nodes(html, void_elements, raw_text_elements, chardata, decode_attrs, raw_text_tag, nodes, body <> "</")
         end
     end
-    defp to_ast_nodes("<" <> html, void_elements, raw_text_elements, chardata, nil, nodes, body) do
-        to_ast_nodes(html, void_elements, raw_text_elements, chardata, nil, nodes, body, chardata)
+    defp to_ast_nodes("<" <> html, void_elements, raw_text_elements, chardata, decode_attrs, nil, nodes, body) do
+        to_ast_nodes(html, void_elements, raw_text_elements, chardata, decode_attrs, nil, nodes, body, chardata)
     end
-    defp to_ast_nodes(<<c :: utf8, html :: binary>>, void_elements, raw_text_elements, chardata, raw_text_tag, nodes, body), do: to_ast_nodes(html, void_elements, raw_text_elements, chardata, raw_text_tag, nodes, <<body :: binary, c :: utf8>>)
+    defp to_ast_nodes(<<c :: utf8, html :: binary>>, void_elements, raw_text_elements, chardata, decode_attrs, raw_text_tag, nodes, body), do: to_ast_nodes(html, void_elements, raw_text_elements, chardata, decode_attrs, raw_text_tag, nodes, <<body :: binary, c :: utf8>>)
 
-    defp to_ast_nodes(html, void_elements, raw_text_elements, chardata, raw_text_tag, nodes, body, { [{ open, close }|matches], include }) do
+    defp to_ast_nodes(html, void_elements, raw_text_elements, chardata, decode_attrs, raw_text_tag, nodes, body, { [{ open, close }|matches], include }) do
         if String.starts_with?(html, open) do
             size = byte_size(open)
             <<_ :: binary-size(size), html :: binary>> = html
 
             { element, html } = to_ast_chardata(String.split(html, close <> ">", parts: 2), open, include)
-            to_ast_nodes(html, void_elements, raw_text_elements, chardata, nil, merge_nodes(element, HtmlEntities.decode(body), nodes))
+            to_ast_nodes(html, void_elements, raw_text_elements, chardata, decode_attrs, nil, merge_nodes(element, HtmlEntities.decode(body), nodes))
         else
-            to_ast_nodes(html, void_elements, raw_text_elements, chardata, raw_text_tag, nodes, body, { matches, include })
+            to_ast_nodes(html, void_elements, raw_text_elements, chardata, decode_attrs, raw_text_tag, nodes, body, { matches, include })
         end
     end
-    defp to_ast_nodes(html, void_elements, raw_text_elements, chardata, _, nodes, body, { [], _ }) do
-        { element, html } = to_ast_element(html, void_elements, raw_text_elements, chardata)
-        to_ast_nodes(html, void_elements, raw_text_elements, chardata, nil, merge_nodes(element, HtmlEntities.decode(body), nodes))
+    defp to_ast_nodes(html, void_elements, raw_text_elements, chardata, decode_attrs, _, nodes, body, { [], _ }) do
+        { element, html } = to_ast_element(html, void_elements, raw_text_elements, chardata, decode_attrs)
+        to_ast_nodes(html, void_elements, raw_text_elements, chardata, decode_attrs, nil, merge_nodes(element, HtmlEntities.decode(body), nodes))
     end
 
     defp to_ast_chardata([content], open, true), do: { { open, [], content }, "" }
@@ -267,23 +292,23 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
     defp till_closing_bracket(">" <> html), do: html
     defp till_closing_bracket(<<_ :: utf8, html :: binary>>), do: till_closing_bracket(html)
 
-    defp to_ast_element(html, void_elements, raw_text_elements, chardata, tag \\ "", attrs \\ [])
-    defp to_ast_element(<<c :: utf8, html :: binary>>, void_elements, raw_text_elements, chardata, "", _) when c in @spaces, do: to_ast_element(html, void_elements, raw_text_elements, chardata, "")
-    defp to_ast_element(<<c :: utf8, html :: binary>>, void_elements, raw_text_elements, chardata, tag, _) when c in @spaces do
+    defp to_ast_element(html, void_elements, raw_text_elements, chardata, decode_attrs, tag \\ "", attrs \\ [])
+    defp to_ast_element(<<c :: utf8, html :: binary>>, void_elements, raw_text_elements, chardata, decode_attrs, "", _) when c in @spaces, do: to_ast_element(html, void_elements, raw_text_elements, chardata, decode_attrs, "")
+    defp to_ast_element(<<c :: utf8, html :: binary>>, void_elements, raw_text_elements, chardata, decode_attrs, tag, _) when c in @spaces do
         { attrs, html } = to_ast_attributes(html)
-        to_ast_element(html, void_elements, raw_text_elements, chardata, tag, Enum.map(attrs, fn { k, v } -> { k, HtmlEntities.decode(v) } end))
+        to_ast_element(html, void_elements, raw_text_elements, chardata, decode_attrs, tag, if(decode_attrs, do: Enum.map(attrs, fn { k, v } -> { k, HtmlEntities.decode(v) } end), else: attrs))
     end
-    defp to_ast_element("/>" <> html, _, _, _, tag, attrs), do: { { tag, attrs, [] }, html }
-    defp to_ast_element(">" <> html, void_elements, raw_text_elements, chardata, tag, attrs) do
+    defp to_ast_element("/>" <> html, _, _, _, _, tag, attrs), do: { { tag, attrs, [] }, html }
+    defp to_ast_element(">" <> html, void_elements, raw_text_elements, chardata, decode_attrs, tag, attrs) do
         { nodes, html } = if MapSet.member?(void_elements, tag) do
             { [], html }
         else
-            to_ast_nodes(html, void_elements, raw_text_elements, chardata, if(MapSet.member?(raw_text_elements, tag), do: tag))
+            to_ast_nodes(html, void_elements, raw_text_elements, chardata, decode_attrs, if(MapSet.member?(raw_text_elements, tag), do: tag))
         end
         { { tag, attrs, nodes }, html }
     end
-    defp to_ast_element(<<c :: utf8, html :: binary>>, void_elements, raw_text_elements, chardata, tag, attrs), do: to_ast_element(html, void_elements, raw_text_elements, chardata, <<tag :: binary, c :: utf8>>, attrs)
-    defp to_ast_element(_, _, _, _, _, _), do: { [], "" }
+    defp to_ast_element(<<c :: utf8, html :: binary>>, void_elements, raw_text_elements, chardata, decode_attrs, tag, attrs), do: to_ast_element(html, void_elements, raw_text_elements, chardata, decode_attrs, <<tag :: binary, c :: utf8>>, attrs)
+    defp to_ast_element(_, _, _, _, _, _, _), do: { [], "" }
 
     defp to_ast_attributes(html, type \\ :key, quoted \\ nil, attrs \\ [{ "", "" }])
     defp to_ast_attributes("=" <> html, :key, nil, attrs), do: to_ast_attributes(html, :value, nil, attrs)
