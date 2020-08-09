@@ -46,6 +46,15 @@ defmodule SimpleMarkdownRendererHTMLUtilitiesTest do
         assert ~S(<script>1 & 2</script>) == { :script, [], "1 & 2" } |> SimpleMarkdown.Renderer.HTML.Utilities.ast_to_html |> IO.chardata_to_string
         assert ~S(<foo>1 & 2</foo>) == { :foo, [], "1 & 2" } |> SimpleMarkdown.Renderer.HTML.Utilities.ast_to_html(raw_text_elements: [:foo]) |> IO.chardata_to_string
         assert ~S(<foo>1 & 2</foo>) == { :foo, [], "1 & 2" } |> SimpleMarkdown.Renderer.HTML.Utilities.ast_to_html(raw_text_elements: ["foo"]) |> IO.chardata_to_string
+
+        assert ~S(<p>test</p>) == [{ "!--", [], " <p>ignore</p> " }, { "p", [], "test" }] |> SimpleMarkdown.Renderer.HTML.Utilities.ast_to_html() |> IO.chardata_to_string
+        assert ~S(<!-- <p>ignore</p> --><p>test</p>) == [{ "!--", [], " <p>ignore</p> " }, { "p", [], "test" }] |> SimpleMarkdown.Renderer.HTML.Utilities.ast_to_html(include_chardata: true) |> IO.chardata_to_string
+        assert ~S(<!--> &lt;p&gt;ignore&lt;/p&gt; </!--><p>test</p>) == [{ "!--", [], " <p>ignore</p> " }, { "p", [], "test" }] |> SimpleMarkdown.Renderer.HTML.Utilities.ast_to_html(chardata: [], include_chardata: true) |> IO.chardata_to_string
+        assert ~S(<![CDATA[foo]]>) == { "![CDATA[", [], "foo" } |> SimpleMarkdown.Renderer.HTML.Utilities.ast_to_html(include_chardata: true) |> IO.chardata_to_string
+        assert ~S(<!DOCTYPE html>) == { "!DOCTYPE", [], " html" } |> SimpleMarkdown.Renderer.HTML.Utilities.ast_to_html(include_chardata: true) |> IO.chardata_to_string
+        assert ~S(<?xml version="1.0" encoding="UTF-8" ?>) == { "?", [], "xml version=\"1.0\" encoding=\"UTF-8\" " } |> SimpleMarkdown.Renderer.HTML.Utilities.ast_to_html(include_chardata: true) |> IO.chardata_to_string
+        assert ~S(<foo <p>ignore</p> >) == { "foo", [], " <p>ignore</p> " } |> SimpleMarkdown.Renderer.HTML.Utilities.ast_to_html(chardata: [{ "foo", "" }], include_chardata: true) |> IO.chardata_to_string
+        assert ~S(<foo <p>ignore</p> bar>) == { "foo", [], " <p>ignore</p> " } |> SimpleMarkdown.Renderer.HTML.Utilities.ast_to_html(chardata: [{ "foo", "bar" }], include_chardata: true) |> IO.chardata_to_string
     end
 
     test "html_to_ast" do
@@ -63,6 +72,19 @@ defmodule SimpleMarkdownRendererHTMLUtilitiesTest do
         assert { "foo", [{ "a", "" }], "test" } == ~S(<foo a>test</foo>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast
         assert { "foo", [{ "a", "bar" }], "test" } == ~S(<foo a="bar">test</foo>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast
         assert { "foo", [{ "a", "bar & baz" }], "test" } == ~S(<foo a="bar &amp; baz">test</foo>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast
+
+        assert { "p", [], "test" } == ~S(<!-- <p>ignore</p> --><p>test</p>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast
+        assert [{ "!--", [], " <p>ignore</p> " }, { "p", [], "test" }] == ~S(<!-- <p>ignore</p> --><p>test</p>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast(include_chardata: true)
+        assert { "!--", [], " <p>ignore</p> " } == ~S(<!-- <p>ignore</p> ) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast(include_chardata: true)
+        assert { "!--", [], " <p>ignore</p> --" } == ~S(<!-- <p>ignore</p> --) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast(include_chardata: true)
+        assert { "!--", [], " &lt;p&gt;ignore&lt;/p&gt; " } == ~S(<!-- &lt;p&gt;ignore&lt;/p&gt; ) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast(include_chardata: true)
+
+        assert [{ "!--", [], " <p>ignore</p> " }, { "p", [], "test" }] == ~S(<!--> &lt;p&gt;ignore&lt;/p&gt; </!--><p>test</p>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast(chardata: [], include_chardata: true)
+        assert { "![CDATA[", [], "foo" } == ~S(<![CDATA[foo]]>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast(include_chardata: true)
+        assert { "!DOCTYPE", [], " html" } == ~S(<!DOCTYPE html>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast(include_chardata: true)
+        assert { "?", [], "xml version=\"1.0\" encoding=\"UTF-8\" " } == ~S(<?xml version="1.0" encoding="UTF-8" ?>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast(include_chardata: true)
+        assert [{ "foo", [], " <p" }, "ignore"] == ~S(<foo <p>ignore</p> >) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast(chardata: [{ "foo", "" }], include_chardata: true)
+        assert { "foo", [], " <p>ignore</p> " } == ~S(<foo <p>ignore</p> bar>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast(chardata: [{ "foo", "bar" }], include_chardata: true)
     end
 
     test "complicated blocks" do
