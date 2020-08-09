@@ -311,15 +311,17 @@ defmodule SimpleMarkdown.Renderer.HTML.Utilities do
     defp to_ast_element(_, _, _, _, _, _, _), do: { [], "" }
 
     defp to_ast_attributes(html, type \\ :key, quoted \\ nil, attrs \\ [{ "", "" }])
-    defp to_ast_attributes("=" <> html, :key, nil, attrs), do: to_ast_attributes(html, :value, nil, attrs)
+    defp to_ast_attributes("=" <> html, type, nil, attrs) when type in [:key, :key_s], do: to_ast_attributes(html, :value, nil, attrs)
     defp to_ast_attributes(html = <<c :: utf8, _ :: binary>>, _, nil, [{ "", "" }|attrs]) when c in @terminators, do: { Enum.reverse(attrs), html }
     defp to_ast_attributes(html = <<c :: utf8, _ :: binary>>, _, nil, attrs) when c in @terminators, do: { Enum.reverse(attrs), html }
     defp to_ast_attributes(<<c :: utf8, html :: binary>>, :key, nil, attrs = [{ "", "" }|_]) when c in @spaces, do: to_ast_attributes(html, :key, nil, attrs)
-    defp to_ast_attributes(<<c :: utf8, html :: binary>>, :key, nil, attrs) when c in @spaces, do: to_ast_attributes(html, :key, nil, [{ "", "" }|attrs])
-    defp to_ast_attributes(<<c :: utf8, html :: binary>>, :value, nil, attrs) when c in @spaces, do: to_ast_attributes(html, :key, nil, [{ "", "" }|attrs])
-    defp to_ast_attributes(<<c :: utf8, html :: binary>>, type, nil, attrs) when c in @quotes, do: to_ast_attributes(html, type, c, attrs)
-    defp to_ast_attributes(<<c :: utf8, html :: binary>>, type, c, attrs), do: to_ast_attributes(html, type, nil, attrs)
+    defp to_ast_attributes(<<c :: utf8, html :: binary>>, :key, nil, attrs) when c in @spaces, do: to_ast_attributes(html, :key_s, nil, attrs)
+    defp to_ast_attributes(<<c :: utf8, html :: binary>>, :value, nil, attrs = [{ _, value }|_]) when byte_size(value) > 0 and c in @spaces, do: to_ast_attributes(html, :key, nil, [{ "", "" }|attrs])
+    defp to_ast_attributes(<<c :: utf8, html :: binary>>, :value, nil, attrs) when c in @spaces, do: to_ast_attributes(html, :value, nil, attrs)
+    defp to_ast_attributes(<<c :: utf8, html :: binary>>, :value, nil, attrs) when c in @quotes, do: to_ast_attributes(html, :value, c, attrs)
+    defp to_ast_attributes(<<c :: utf8, html :: binary>>, :value, c, attrs), do: to_ast_attributes(html, :value, nil, attrs)
     defp to_ast_attributes(<<c :: utf8, html :: binary>>, :key, quoted, [{ key, value }|attrs]), do: to_ast_attributes(html, :key, quoted, [{ <<key :: binary, c :: utf8>>, value }|attrs])
     defp to_ast_attributes(<<c :: utf8, html :: binary>>, :value, quoted, [{ key, value }|attrs]), do: to_ast_attributes(html, :value, quoted, [{ key, <<value :: binary, c :: utf8>> }|attrs])
+    defp to_ast_attributes(html, :key_s, _, attrs), do: to_ast_attributes(html, :key, nil, [{ "", "" }|attrs])
     defp to_ast_attributes(_, _, _, _), do: { [], "" }
 end

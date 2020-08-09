@@ -79,6 +79,12 @@ defmodule SimpleMarkdownRendererHTMLUtilitiesTest do
         assert { "foo", [{ "a", "bar" }], "test" } == ~S(<foo a="bar">test</foo>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast
         assert { "foo", [{ "a", "bar &amp; baz" }], "test" } == ~S(<foo a="bar &amp; baz">test</foo>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast
         assert { "foo", [{ "a", "bar & baz" }], "test" } == ~S(<foo a="bar &amp; baz">test</foo>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast(decode_attributes: true)
+        assert { "foo", [{ "a", "bar" }], "test" } == ~S(<foo a=bar>test</foo>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast
+        assert { "foo", [{ "a", "bar" }, { "baz", "" }], "test" } == ~S(<foo a=bar baz>test</foo>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast
+        assert { "foo", [{ "a", "bar" }], "test" } == ~S(<foo a= bar>test</foo>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast
+        assert { "foo", [{ "a", "bar" }, { "baz", "" }], "test" } == ~S(<foo a= bar baz>test</foo>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast
+        assert { "foo", [{ "a", "bar" }, { "baz", "" }], "test" } == ~S(<foo a = bar baz>test</foo>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast
+        assert { "foo", [{ "z", "" }, { "a", "bar" }, { "baz", "" }], "test" } == ~S(<foo z a = bar baz>test</foo>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast
 
         assert { "p", [], "test" } == ~S(<!-- <p>ignore</p> --><p>test</p>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast
         assert [{ "!--", [], " <p>ignore</p> " }, { "p", [], "test" }] == ~S(<!-- <p>ignore</p> --><p>test</p>) |> SimpleMarkdown.Renderer.HTML.Utilities.html_to_ast(include_chardata: true)
